@@ -1,0 +1,228 @@
+local R = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local W = R:CreateWindow({
+    Name = "Script Loop UI",
+    LoadingTitle = "K HUB",
+    LoadingSubtitle = "by Sirius",
+    ConfigurationSaving = {Enabled = true, FolderName = "RayfieldConfig", FileName = "LoopScriptConfig"}
+})
+local M = W:CreateTab("Main", 4483362458)
+local L = false
+local S = ""
+local C = 1
+local U = true
+
+local function RS()
+    while L do
+        if S ~= "" then
+            local s, e = pcall(function() loadstring(S)() end)
+            if not s then warn("Script error: " .. e) end
+        end
+        if U then wait(C) else wait(0) end
+    end
+end
+
+local SI = M:CreateInput({
+    Name = "Enter Lua Script",
+    PlaceholderText = "Enter your Lua script here",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(t) S = t end
+})
+M:CreateInput({
+    Name = "Set Cooldown (seconds)",
+    PlaceholderText = "Enter cooldown (e.g., 1.5)",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(t)
+        local n = tonumber(t)
+        if n and n > 0 then
+            C = n
+            R:Notify({Title = "Cooldown Updated", Content = "Cooldown set to " .. n .. " seconds.", Duration = 3})
+        else
+            R:Notify({Title = "Invalid Cooldown", Content = "Please enter a valid number greater than 0.", Duration = 3})
+        end
+    end
+})
+M:CreateButton({
+    Name = "Start/Stop Loop",
+    Callback = function()
+        L = not L
+        if L then
+            R:Notify({Title = "Loop Started", Content = "The script is now looping" .. (U and " with a " .. C .. "s cooldown!" or " without cooldown!"), Duration = 3})
+            spawn(RS)
+        else
+            R:Notify({Title = "Loop Stopped", Content = "The script loop has been stopped.", Duration = 3})
+        end
+    end
+})
+M:CreateButton({
+    Name = "Toggle Cooldown",
+    Callback = function()
+        U = not U
+        R:Notify({Title = "Cooldown " .. (U and "Enabled" or "Disabled"), Content = U and "Loop will use the set cooldown (" .. C .. "s)." or "Loop will run without cooldown.", Duration = 3})
+    end
+})
+M:CreateLabel("Enter your Lua script, set cooldown, and control the loop")
+
+local ST = W:CreateTab("Scripts", 4483362458)
+ST:CreateButton({
+    Name = "Infinite Yield",
+    Callback = function()
+        local s, e = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))() end)
+        R:Notify({Title = s and "Infinite Yield Loaded" or "Load Failed", Content = s and "Infinite Yield script has been executed." or "Failed to load Infinite Yield: " .. e, Duration = 3})
+    end
+})
+ST:CreateButton({
+    Name = "Dex",
+    Callback = function()
+        local s, e = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/MariyaFurmanova/Library/main/dex2.0", true))() end)
+        R:Notify({Title = s and "Dex Loaded" or "Load Failed", Content = s and "Dex Explorer script has been executed." or "Failed to load Dex Explorer: " .. e, Duration = 3})
+    end
+})
+ST:CreateButton({
+    Name = "K Hub Exec",
+    Callback = function()
+        local s, e = pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/diwrkish/k-hub/refs/heads/main/K%20hub%20executor"))()
+        end)
+        R:Notify({
+            Title = s and "K Hub Exec Loaded" or "Load Failed",
+            Content = s and "K Hub Executor script has been executed." or "Failed to load K Hub Executor: " .. (e or "unknown error") .. ". Check console for details.",
+            Duration = s and 3 or 5
+        })
+        if not s then print("K Hub Exec error details: " .. (e or "unknown error")) end
+    end
+})
+ST:CreateLabel("Click a button to load the respective script")
+
+local SLT = W:CreateTab("Slap Tower", 4483362458)
+local SP = false
+local SS = "timestop"
+
+local function SL()
+    local s, e = pcall(function()
+        local RS = game:GetService("ReplicatedStorage")
+        local EE = RS:WaitForChild("EquipSlapEvent", 10)
+        if not EE or not EE:IsA("RemoteEvent") then error("EquipSlapEvent not found or not a RemoteEvent in ReplicatedStorage") end
+        local SE = SS == "timestop" and "God's Hand" or SS == "blackhole" and "GalaxySlap" or SS == "tpEveryone" and "SwapperSlap" or SS == "tixRain" and "TixSlap"
+        print("Attempting to equip: " .. SE)
+        EE:FireServer(SE)
+    end)
+    if not s then
+        R:Notify({Title = "Equip Failed", Content = "Failed to equip " .. (SS == "timestop" and "God's Hand" or SS == "blackhole" and "GalaxySlap" or SS == "tpEveryone" and "SwapperSlap" or SS == "tixRain" and "TixSlap") .. ": " .. (e or "unknown error") .. ". Check console for details.", Duration = 5})
+        print("Equip error details: " .. (e or "unknown error"))
+        SP = false
+        return
+    end
+    while SP do
+        local s, e = pcall(function()
+            local CH = game:GetService("Players").LocalPlayer.Character
+            if SS == "timestop" then
+                if CH and CH:FindFirstChild("God's Hand") and CH["God's Hand"]:FindFirstChild("Event") then
+                    print("Firing timestop for LocalPlayer")
+                    CH["God's Hand"].Event:FireServer("timestop")
+                else
+                    print("God's Hand or Event not found for LocalPlayer")
+                end
+            elseif SS == "blackhole" then
+                if CH and CH:FindFirstChild("GalaxySlap") and CH.GalaxySlap:FindFirstChild("BlackholeEvent") then
+                    print("Firing blackhole for LocalPlayer")
+                    CH.GalaxySlap.BlackholeEvent:FireServer()
+                else
+                    print("GalaxySlap or BlackholeEvent not found for LocalPlayer")
+                end
+            elseif SS == "tpEveryone" then
+                for _, p in pairs(game:GetService("Players"):GetPlayers()) do
+                    if p ~= game:GetService("Players").LocalPlayer then
+                        local a = {"swap", Vector3.new(167.49005126953125, 71.39762115478516, -26.157346725463867), Vector3.new(92.65496826171875, 15.347707748413086, -55.331329345703125), p}
+                        if CH and CH:FindFirstChild("SwapperSlap") and CH.SwapperSlap:FindFirstChild("Event") then
+                            print("Firing TP for: " .. p.Name)
+                            CH.SwapperSlap.Event:FireServer(unpack(a))
+                        else
+                            print("SwapperSlap or Event not found for LocalPlayer")
+                        end
+                    end
+                end
+            elseif SS == "tixRain" then
+                if CH and CH:FindFirstChild("TixSlap") and CH.TixSlap:FindFirstChild("Event") then
+                    print("Firing tix_skill for LocalPlayer")
+                    CH.TixSlap.Event:FireServer("tix_skill")
+                else
+                    print("TixSlap or Event not found for LocalPlayer")
+                end
+            end
+        end)
+        if not s then warn("Spam error: " .. e) end
+        wait()
+    end
+end
+
+SLT:CreateDropdown({
+    Name = "Select Spam Type",
+    Options = {"timestop", "blackhole", "tpEveryone", "tixRain"},
+    CurrentOption = {SS},
+    MultipleOptions = false,
+    Callback = function(o)
+        SS = o[1]
+        R:Notify({Title = "Spam Type Selected", Content = "Selected spam: " .. SS, Duration = 3})
+    end
+})
+SLT:CreateButton({
+    Name = "Start Spam",
+    Callback = function()
+        SP = not SP
+        if SP then
+            R:Notify({Title = "Spam Started", Content = "Spamming " .. SS .. " (equipping related slap).", Duration = 3})
+            spawn(SL)
+        else
+            R:Notify({Title = "Spam Stopped", Content = "Spamming " .. SS .. " has been stopped.", Duration = 3})
+        end
+    end
+})
+SLT:CreateButton({
+    Name = "Teleport to End",
+    Callback = function()
+        local s, e = pcall(function()
+            local player = game:GetService("Players").LocalPlayer
+            local character = player.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(4.48, 305.50, -159.67))
+                R:Notify({Title = "Teleport Successful", Content = "Teleported to (4.48, 305.50, -159.67).", Duration = 3})
+            else
+                error("Character or HumanoidRootPart not found")
+            end
+        end)
+        if not s then
+            R:Notify({Title = "Teleport Failed", Content = "Failed to teleport: " .. (e or "unknown error") .. ". Check console for details.", Duration = 5})
+            print("Teleport error details: " .. (e or "unknown error"))
+        end
+    end
+})
+SLT:CreateLabel("Select spam type and start spamming")
+
+local SGT = W:CreateTab("Slap Giver", 4483362458)
+local SL = {"AppleSlap", "BalloonSlap", "BigSlap", "BlockSlap", "BlowSlap", "BrickSlap", "DefaultSlap", "DiamondSlap", "DiceSlap", "Error", "FruitSlap", "GalaxySlap", "God's Hand", "GoldSlap", "LuckySlap", "MagnetSlap", "MailSlap", "PoisonSlap", "RainbowLuckySlap", "SpinSlap", "StreakSlap", "StunSlap", "SwapperSlap", "TixSlap", "TripleSlap"}
+local SEL = SL[1]
+SGT:CreateDropdown({
+    Name = "Select Slap",
+    Options = SL,
+    CurrentOption = {SEL},
+    MultipleOptions = false,
+    Callback = function(o)
+        SEL = o[1]
+        R:Notify({Title = "Slap Selected", Content = "Selected slap: " .. SEL, Duration = 3})
+    end
+})
+SGT:CreateButton({
+    Name = "Equip Selected Slap",
+    Callback = function()
+        local s, e = pcall(function()
+            local RS = game:GetService("ReplicatedStorage")
+            local EE = RS:WaitForChild("EquipSlapEvent", 10)
+            if not EE or not EE:IsA("RemoteEvent") then error("EquipSlapEvent not found or not a RemoteEvent in ReplicatedStorage") end
+            print("Attempting to equip: " .. SEL)
+            EE:FireServer(SEL)
+        end)
+        R:Notify({Title = s and "Slap Equipped" or "Equip Failed", Content = s and SEL .. " has been equipped." or "Failed to equip " .. SEL .. ": " .. (e or "unknown error") .. ". Check console for details.", Duration = s and 3 or 5})
+        if not s then print("Equip error details: " .. (e or "unknown error")) end
+    end
+})
+SGT:CreateLabel("Select a slap and click to equip it")
