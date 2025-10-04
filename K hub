@@ -81,7 +81,7 @@ ST:CreateButton({
     Name = "K Hub Exec",
     Callback = function()
         local s, e = pcall(function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/diwrkish/K-hub/refs/heads/main/K%20hub%20executor?token=GHSAT0AAAAAADLYSKRZXWYJBYQN75RRCHSW2HBSVKQ"))()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/diwrkish/K-hub/refs/heads/main/K%20hub%20executor?token=GHSAT0AAAAAADLYSKRZ6IQDM5XB4ZQDKDME2HBS6NA"))()
         end)
         R:Notify({
             Title = s and "K Hub Exec Loaded" or "Load Failed",
