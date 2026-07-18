@@ -1,0 +1,719 @@
+-- 🎮 Auto E + Click Script - FIXED (crash protection) + Full Features
+local player = game:GetService("Players").LocalPlayer
+local uis = game:GetService("UserInputService")
+local StarterGui = game:GetService("StarterGui")
+local vim = game:GetService("VirtualInputManager")
+
+-- ========== SETTINGS ==========
+local settings = {
+    clickX = 780,
+    clickY = 453,
+    delays = {
+        openMenuPress = 0.05,
+        menuOpenWait = 0.1,
+        clickHold = 0.03,
+        postClickWait = 0.05,
+        closeMenuPress = 0.05,
+    },
+    keybinds = {
+        execute = Enum.KeyCode.R,
+        disable = Enum.KeyCode.Y,
+        toggleMenu = Enum.KeyCode.M,
+        clearToys = Enum.KeyCode.T,
+    }
+}
+
+-- ========== VARIABLES ==========
+local enabled = true
+local menuOpen = false
+local rebindingKey = nil
+local isExecuting = false
+local inputConnection = nil
+local waitingForCoordinateClick = false
+
+-- ========== CLEAR TOYS FUNCTION ==========
+local function clearAllToys()
+    local folder = workspace:FindFirstChild("BLOX_FRUIT01110SpawnedInToys")
+    if folder then
+        for _, child in ipairs(folder:GetChildren()) do
+            pcall(function() child:Destroy() end)
+        end
+    end
+    
+    pcall(function()
+        local menuGui = player.PlayerGui:FindFirstChild("MenuGui")
+        if menuGui then
+            local menu = menuGui:FindFirstChild("Menu")
+            if menu then
+                local tabContents = menu:FindFirstChild("TabContents")
+                if tabContents then
+                    local toyDestroy = tabContents:FindFirstChild("ToyDestroy")
+                    if toyDestroy then
+                        local meterFrame = toyDestroy:FindFirstChild("MeterFrame")
+                        if meterFrame then
+                            local spaceUsedNumbers = meterFrame:FindFirstChild("SpaceUsedNumbers")
+                            if spaceUsedNumbers and spaceUsedNumbers:IsA("TextLabel") then
+                                spaceUsedNumbers.Text = "0/100"
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end)
+end
+
+-- ========== E + CLICK + E SEQUENCE ==========
+local function doAction()
+    if not enabled or isExecuting then return end
+    isExecuting = true
+    
+    vim:SendKeyEvent(true, Enum.KeyCode.E, false, nil)
+    task.wait(settings.delays.openMenuPress)
+    vim:SendKeyEvent(false, Enum.KeyCode.E, false, nil)
+    
+    task.wait(settings.delays.menuOpenWait)
+    
+    vim:SendMouseButtonEvent(settings.clickX, settings.clickY, 0, true, nil, 0)
+    task.wait(settings.delays.clickHold)
+    vim:SendMouseButtonEvent(settings.clickX, settings.clickY, 0, false, nil, 0)
+    
+    task.wait(settings.delays.postClickWait)
+    
+    vim:SendKeyEvent(true, Enum.KeyCode.E, false, nil)
+    task.wait(settings.delays.closeMenuPress)
+    vim:SendKeyEvent(false, Enum.KeyCode.E, false, nil)
+    
+    isExecuting = false
+end
+
+-- ========== MOUSE CONTROL (PROTECTED) ==========
+local function unlockMouse()
+    pcall(function()
+        player.DevEnableMouseLock = true
+        task.wait(0.1)
+        player.DevComputerCameraMode = 'UserChoice'
+        player.DevComputerMovementMode = 'UserChoice'
+        player.CameraMode = 'Classic'
+        player.DevCameraOcclusionMode = 'Zoom'
+        uis.MouseIconEnabled = true
+        uis.MouseBehavior = Enum.MouseBehavior.Default
+        StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+        pcall(function() uis.MouseIconEnabled = true end)
+    end)
+end
+
+local function lockMouse()
+    pcall(function()
+        uis.MouseBehavior = Enum.MouseBehavior.LockCenter
+        uis.MouseIconEnabled = false
+        player.DevEnableMouseLock = false
+        player.DevComputerCameraMode = 'Classic'
+        player.DevComputerMovementMode = 'KeyboardMouse'
+        player.CameraMode = 'Classic'
+        player.DevCameraOcclusionMode = 'Zoom'
+        pcall(function() uis.MouseIconEnabled = false end)
+    end)
+end
+
+-- ========== GUI CREATION ==========
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "AutoEScriptUI"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 420, 0, 560)
+mainFrame.Position = UDim2.new(0.5, -210, 0.28, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 22)
+mainFrame.BorderSizePixel = 0
+mainFrame.Visible = false
+mainFrame.Parent = screenGui
+
+local shadow = Instance.new("Frame")
+shadow.Size = UDim2.new(1, 8, 1, 8)
+shadow.Position = UDim2.new(0, -4, 0, -4)
+shadow.BackgroundColor3 = Color3.new(0, 0, 0)
+shadow.BackgroundTransparency = 0.5
+shadow.BorderSizePixel = 0
+shadow.ZIndex = -1
+shadow.Parent = mainFrame
+Instance.new("UICorner", shadow).CornerRadius = UDim.new(0, 16)
+
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 14)
+
+local gradientBar = Instance.new("Frame")
+gradientBar.Size = UDim2.new(1, 0, 0, 8)
+gradientBar.BackgroundColor3 = Color3.fromRGB(80, 20, 120)
+gradientBar.BorderSizePixel = 0
+gradientBar.Parent = mainFrame
+Instance.new("UICorner", gradientBar).CornerRadius = UDim.new(0, 14)
+
+local uiGradient = Instance.new("UIGradient")
+uiGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(120, 30, 160)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(60, 10, 100))
+})
+uiGradient.Rotation = 90
+uiGradient.Parent = gradientBar
+
+local titleBar = Instance.new("Frame")
+titleBar.Size = UDim2.new(1, 0, 0, 55)
+titleBar.BackgroundColor3 = Color3.fromRGB(28, 28, 32)
+titleBar.BorderSizePixel = 0
+titleBar.Parent = mainFrame
+Instance.new("UICorner", titleBar).CornerRadius = UDim.new(0, 14)
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, -20, 1, 0)
+titleLabel.Position = UDim2.new(0, 20, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "🎮 Auto E + Click"
+titleLabel.TextColor3 = Color3.new(1, 1, 1)
+titleLabel.TextSize = 22
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Parent = titleBar
+
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 40, 0, 40)
+closeBtn.Position = UDim2.new(1, -50, 0.5, -20)
+closeBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+closeBtn.Text = "✕"
+closeBtn.TextColor3 = Color3.new(1, 1, 1)
+closeBtn.TextSize = 20
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.Parent = titleBar
+Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 8)
+
+-- Dragging
+local dragging = false
+local dragStart, startPos
+titleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+    end
+end)
+uis.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+uis.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- Tabs
+local tabButtons = {}
+local tabs = {}
+local tabHolder = Instance.new("Frame")
+tabHolder.Size = UDim2.new(1, 0, 0, 40)
+tabHolder.Position = UDim2.new(0, 0, 0, 55)
+tabHolder.BackgroundColor3 = Color3.fromRGB(24, 24, 28)
+tabHolder.BorderSizePixel = 0
+tabHolder.Parent = mainFrame
+
+local tabNames = {"Controls", "Keybinds", "Settings", "Scripts"}
+local currentTab = "Controls"
+
+local function selectTab(name)
+    currentTab = name
+    for n, frame in pairs(tabs) do
+        frame.Visible = (n == name)
+    end
+    for n, btn in pairs(tabButtons) do
+        if n == name then
+            btn.BackgroundColor3 = Color3.fromRGB(130, 50, 180)
+            btn.TextColor3 = Color3.new(1,1,1)
+        else
+            btn.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+            btn.TextColor3 = Color3.new(0.7,0.7,0.7)
+        end
+    end
+end
+
+for i, name in ipairs(tabNames) do
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 85, 1, 0)
+    btn.Position = UDim2.new(0, 10 + (i-1)*95, 0, 0)
+    btn.BackgroundColor3 = (i==1 and Color3.fromRGB(130, 50, 180)) or Color3.fromRGB(35, 35, 40)
+    btn.Text = name
+    btn.TextColor3 = (i==1 and Color3.new(1,1,1)) or Color3.new(0.7,0.7,0.7)
+    btn.TextSize = 14
+    btn.Font = Enum.Font.GothamSemibold
+    btn.Parent = tabHolder
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    btn.MouseButton1Click:Connect(function() selectTab(name) end)
+    tabButtons[name] = btn
+end
+
+local contentFrame = Instance.new("Frame")
+contentFrame.Size = UDim2.new(1, -24, 1, -230)
+contentFrame.Position = UDim2.new(0, 12, 0, 100)
+contentFrame.BackgroundTransparency = 1
+contentFrame.Parent = mainFrame
+
+-- Create tab frames
+local controlsFrame = Instance.new("Frame")
+controlsFrame.Size = UDim2.new(1, 0, 1, 0)
+controlsFrame.BackgroundTransparency = 1
+controlsFrame.Visible = true
+controlsFrame.Parent = contentFrame
+tabs["Controls"] = controlsFrame
+
+local keybindsFrame = Instance.new("Frame")
+keybindsFrame.Size = UDim2.new(1, 0, 1, 0)
+keybindsFrame.BackgroundTransparency = 1
+keybindsFrame.Visible = false
+keybindsFrame.Parent = contentFrame
+tabs["Keybinds"] = keybindsFrame
+
+local settingsFrame = Instance.new("ScrollingFrame")
+settingsFrame.Size = UDim2.new(1, 0, 1, 0)
+settingsFrame.BackgroundTransparency = 1
+settingsFrame.Visible = false
+settingsFrame.CanvasSize = UDim2.new(0, 0, 0, 600)
+settingsFrame.ScrollBarThickness = 6
+settingsFrame.ScrollBarImageColor3 = Color3.fromRGB(130, 50, 180)
+settingsFrame.Parent = contentFrame
+tabs["Settings"] = settingsFrame
+
+local scriptsFrame = Instance.new("Frame")
+scriptsFrame.Size = UDim2.new(1, 0, 1, 0)
+scriptsFrame.BackgroundTransparency = 1
+scriptsFrame.Visible = false
+scriptsFrame.Parent = contentFrame
+tabs["Scripts"] = scriptsFrame
+
+-- ========== POPULATE CONTROLS TAB ==========
+local yOffset = 10
+local function addControlLabel(text, keyText)
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -10, 0, 36)
+    lbl.Position = UDim2.new(0, 10, 0, yOffset)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = text
+    lbl.TextColor3 = Color3.new(0.9, 0.9, 0.95)
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Font = Enum.Font.GothamMedium
+    lbl.TextSize = 16
+    lbl.Parent = controlsFrame
+
+    local keyLabel = Instance.new("TextLabel")
+    keyLabel.Size = UDim2.new(0, 60, 0, 28)
+    keyLabel.Position = UDim2.new(1, -70, 0, yOffset + 4)
+    keyLabel.BackgroundColor3 = Color3.fromRGB(130, 50, 180)
+    keyLabel.BackgroundTransparency = 0.2
+    keyLabel.Text = keyText
+    keyLabel.TextColor3 = Color3.new(1,1,1)
+    keyLabel.TextSize = 16
+    keyLabel.Font = Enum.Font.GothamBold
+    keyLabel.Parent = controlsFrame
+    Instance.new("UICorner", keyLabel).CornerRadius = UDim.new(0, 6)
+
+    yOffset = yOffset + 40
+end
+
+addControlLabel("Execute Sequence", "R")
+addControlLabel("Disable + Delete All", "Y")
+addControlLabel("Toggle Menu", "M")
+addControlLabel("Clear Toys", "T")
+
+local doActionBtn = Instance.new("TextButton")
+doActionBtn.Size = UDim2.new(1, -20, 0, 45)
+doActionBtn.Position = UDim2.new(0, 10, 0, yOffset + 20)
+doActionBtn.BackgroundColor3 = Color3.fromRGB(130, 50, 180)
+doActionBtn.Text = "⚡ E → Click x" .. settings.clickX .. " y" .. settings.clickY .. " → E"
+doActionBtn.TextColor3 = Color3.new(1,1,1)
+doActionBtn.Font = Enum.Font.GothamBold
+doActionBtn.TextSize = 14
+doActionBtn.Parent = controlsFrame
+Instance.new("UICorner", doActionBtn).CornerRadius = UDim.new(0, 10)
+
+local function updateDoActionBtnText()
+    doActionBtn.Text = "⚡ E → Click x" .. settings.clickX .. " y" .. settings.clickY .. " → E"
+end
+
+doActionBtn.MouseButton1Click:Connect(function()
+    doAction()
+    doActionBtn.BackgroundColor3 = Color3.fromRGB(160, 70, 200)
+    task.wait(0.15)
+    doActionBtn.BackgroundColor3 = Color3.fromRGB(130, 50, 180)
+end)
+
+-- Set click position button
+local setPosBtn = Instance.new("TextButton")
+setPosBtn.Size = UDim2.new(1, -20, 0, 40)
+setPosBtn.Position = UDim2.new(0, 10, 0, yOffset + 75)
+setPosBtn.BackgroundColor3 = Color3.fromRGB(100, 30, 150)
+setPosBtn.Text = "🎯 Set Click Position (Click anywhere)"
+setPosBtn.TextColor3 = Color3.new(1,1,1)
+setPosBtn.Font = Enum.Font.GothamBold
+setPosBtn.TextSize = 13
+setPosBtn.Parent = controlsFrame
+Instance.new("UICorner", setPosBtn).CornerRadius = UDim.new(0, 8)
+
+setPosBtn.MouseButton1Click:Connect(function()
+    waitingForCoordinateClick = true
+    setPosBtn.Text = "🎯 Click anywhere on screen..."
+    setPosBtn.BackgroundColor3 = Color3.fromRGB(160, 70, 200)
+end)
+
+-- ========== KEYBINDS TAB ==========
+local keybindFields = {}
+local function createKeybindRow(actionName, currentKeyEnum)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, -10, 0, 50)
+    frame.BackgroundColor3 = Color3.fromRGB(32, 32, 36)
+    frame.BorderSizePixel = 0
+    frame.Parent = keybindsFrame
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+    
+    local actionLabel = Instance.new("TextLabel")
+    actionLabel.Size = UDim2.new(0, 150, 1, 0)
+    actionLabel.Position = UDim2.new(0, 12, 0, 0)
+    actionLabel.BackgroundTransparency = 1
+    actionLabel.Text = actionName
+    actionLabel.TextColor3 = Color3.new(0.9,0.9,0.95)
+    actionLabel.Font = Enum.Font.GothamMedium
+    actionLabel.TextSize = 15
+    actionLabel.TextXAlignment = Enum.TextXAlignment.Left
+    actionLabel.Parent = frame
+    
+    local keyDisplay = Instance.new("TextLabel")
+    keyDisplay.Size = UDim2.new(0, 80, 0, 30)
+    keyDisplay.Position = UDim2.new(0, 160, 0.5, -15)
+    keyDisplay.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+    keyDisplay.Text = currentKeyEnum.Name
+    keyDisplay.TextColor3 = Color3.new(1,1,1)
+    keyDisplay.Font = Enum.Font.GothamBold
+    keyDisplay.TextSize = 15
+    keyDisplay.Parent = frame
+    Instance.new("UICorner", keyDisplay).CornerRadius = UDim.new(0, 6)
+    
+    local changeBtn = Instance.new("TextButton")
+    changeBtn.Size = UDim2.new(0, 90, 0, 30)
+    changeBtn.Position = UDim2.new(1, -105, 0.5, -15)
+    changeBtn.BackgroundColor3 = Color3.fromRGB(130, 50, 180)
+    changeBtn.Text = "Change"
+    changeBtn.TextColor3 = Color3.new(1,1,1)
+    changeBtn.Font = Enum.Font.GothamBold
+    changeBtn.TextSize = 14
+    changeBtn.Parent = frame
+    Instance.new("UICorner", changeBtn).CornerRadius = UDim.new(0, 6)
+    
+    changeBtn.MouseButton1Click:Connect(function()
+        if rebindingKey == actionName then
+            rebindingKey = nil
+            changeBtn.Text = "Change"
+            keyDisplay.Text = settings.keybinds[actionName].Name
+        else
+            rebindingKey = actionName
+            changeBtn.Text = "Press a key..."
+            keyDisplay.Text = "..."
+        end
+    end)
+    
+    frame.LayoutOrder = #keybindFields + 1
+    table.insert(keybindFields, {frame = frame, action = actionName, keyDisplay = keyDisplay, changeBtn = changeBtn})
+end
+
+local listLayout = Instance.new("UIListLayout")
+listLayout.Padding = UDim.new(0, 8)
+listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+listLayout.Parent = keybindsFrame
+
+createKeybindRow("execute", settings.keybinds.execute)
+createKeybindRow("disable", settings.keybinds.disable)
+createKeybindRow("toggleMenu", settings.keybinds.toggleMenu)
+createKeybindRow("clearToys", settings.keybinds.clearToys)
+
+-- ========== SETTINGS TAB (scrollable) ==========
+local settingsList = Instance.new("UIListLayout")
+settingsList.Padding = UDim.new(0, 6)
+settingsList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+settingsList.SortOrder = Enum.SortOrder.LayoutOrder
+settingsList.Parent = settingsFrame
+
+local function createSectionHeader(text, order)
+    local header = Instance.new("TextLabel")
+    header.Size = UDim2.new(1, -10, 0, 25)
+    header.BackgroundTransparency = 1
+    header.Text = text
+    header.TextColor3 = Color3.fromRGB(0.9,0.9,0.95)
+    header.Font = Enum.Font.GothamBold
+    header.TextSize = 14
+    header.TextXAlignment = Enum.TextXAlignment.Left
+    header.Parent = settingsFrame
+    header.LayoutOrder = order
+end
+
+createSectionHeader("⏱️ Sequence Delays", 0)
+
+local function createDelaySetting(delayName, currentValue, min, max)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, -10, 0, 55)
+    frame.BackgroundColor3 = Color3.fromRGB(32, 32, 36)
+    frame.BorderSizePixel = 0
+    frame.Parent = settingsFrame
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+    frame.LayoutOrder = 1
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0, 150, 1, 0)
+    label.Position = UDim2.new(0, 12, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = delayName
+    label.TextColor3 = Color3.new(0.9,0.9,0.95)
+    label.Font = Enum.Font.GothamMedium
+    label.TextSize = 14
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = frame
+    
+    local valueBox = Instance.new("TextBox")
+    valueBox.Size = UDim2.new(0, 60, 0, 28)
+    valueBox.Position = UDim2.new(0, 160, 0.5, -14)
+    valueBox.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+    valueBox.Text = tostring(currentValue)
+    valueBox.TextColor3 = Color3.new(1,1,1)
+    valueBox.Font = Enum.Font.GothamBold
+    valueBox.TextSize = 14
+    valueBox.PlaceholderText = "0.1"
+    valueBox.Parent = frame
+    Instance.new("UICorner", valueBox).CornerRadius = UDim.new(0, 6)
+    
+    local applyBtn = Instance.new("TextButton")
+    applyBtn.Size = UDim2.new(0, 60, 0, 28)
+    applyBtn.Position = UDim2.new(1, -75, 0.5, -14)
+    applyBtn.BackgroundColor3 = Color3.fromRGB(130, 50, 180)
+    applyBtn.Text = "Set"
+    applyBtn.TextColor3 = Color3.new(1,1,1)
+    applyBtn.Font = Enum.Font.GothamBold
+    applyBtn.TextSize = 14
+    applyBtn.Parent = frame
+    Instance.new("UICorner", applyBtn).CornerRadius = UDim.new(0, 6)
+    
+    applyBtn.MouseButton1Click:Connect(function()
+        local num = tonumber(valueBox.Text)
+        if num and num >= min and num <= max then
+            settings.delays[delayName] = num
+        end
+    end)
+    
+    return frame
+end
+
+createDelaySetting("openMenuPress", settings.delays.openMenuPress, 0.01, 1)
+createDelaySetting("menuOpenWait", settings.delays.menuOpenWait, 0.01, 1)
+createDelaySetting("clickHold", settings.delays.clickHold, 0.01, 1)
+createDelaySetting("postClickWait", settings.delays.postClickWait, 0.01, 1)
+createDelaySetting("closeMenuPress", settings.delays.closeMenuPress, 0.01, 1)
+
+createSectionHeader("📍 Click Coordinates", 2)
+
+local function createCoordSetting(coordName, currentValue)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, -10, 0, 55)
+    frame.BackgroundColor3 = Color3.fromRGB(32, 32, 36)
+    frame.BorderSizePixel = 0
+    frame.Parent = settingsFrame
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+    frame.LayoutOrder = 3
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0, 150, 1, 0)
+    label.Position = UDim2.new(0, 12, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = coordName
+    label.TextColor3 = Color3.new(0.9,0.9,0.95)
+    label.Font = Enum.Font.GothamMedium
+    label.TextSize = 14
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = frame
+    
+    local valueBox = Instance.new("TextBox")
+    valueBox.Size = UDim2.new(0, 60, 0, 28)
+    valueBox.Position = UDim2.new(0, 160, 0.5, -14)
+    valueBox.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+    valueBox.Text = tostring(currentValue)
+    valueBox.TextColor3 = Color3.new(1,1,1)
+    valueBox.Font = Enum.Font.GothamBold
+    valueBox.TextSize = 14
+    valueBox.PlaceholderText = "0"
+    valueBox.Parent = frame
+    Instance.new("UICorner", valueBox).CornerRadius = UDim.new(0, 6)
+    
+    local applyBtn = Instance.new("TextButton")
+    applyBtn.Size = UDim2.new(0, 60, 0, 28)
+    applyBtn.Position = UDim2.new(1, -75, 0.5, -14)
+    applyBtn.BackgroundColor3 = Color3.fromRGB(130, 50, 180)
+    applyBtn.Text = "Set"
+    applyBtn.TextColor3 = Color3.new(1,1,1)
+    applyBtn.Font = Enum.Font.GothamBold
+    applyBtn.TextSize = 14
+    applyBtn.Parent = frame
+    Instance.new("UICorner", applyBtn).CornerRadius = UDim.new(0, 6)
+    
+    applyBtn.MouseButton1Click:Connect(function()
+        local num = tonumber(valueBox.Text)
+        if num and num >= 0 and num <= 3000 then
+            if coordName == "X" then
+                settings.clickX = num
+            elseif coordName == "Y" then
+                settings.clickY = num
+            end
+            updateDoActionBtnText()
+        end
+    end)
+end
+
+createCoordSetting("X", settings.clickX)
+createCoordSetting("Y", settings.clickY)
+
+settingsFrame.CanvasSize = UDim2.new(0, 0, 0, settingsList.AbsoluteContentSize.Y + 10)
+
+-- ========== SCRIPTS TAB ==========
+local scriptsTitle = Instance.new("TextLabel")
+scriptsTitle.Size = UDim2.new(1, -20, 0, 30)
+scriptsTitle.Position = UDim2.new(0, 10, 0, 10)
+scriptsTitle.BackgroundTransparency = 1
+scriptsTitle.Text = "📜 Utility Scripts"
+scriptsTitle.TextColor3 = Color3.new(0.9,0.9,0.95)
+scriptsTitle.Font = Enum.Font.GothamBold
+scriptsTitle.TextSize = 18
+scriptsTitle.TextXAlignment = Enum.TextXAlignment.Left
+scriptsTitle.Parent = scriptsFrame
+
+local iyButton = Instance.new("TextButton")
+iyButton.Size = UDim2.new(1, -20, 0, 45)
+iyButton.Position = UDim2.new(0, 10, 0, 60)
+iyButton.BackgroundColor3 = Color3.fromRGB(130, 50, 180)
+iyButton.Text = "🔥 Execute Infinite Yield"
+iyButton.TextColor3 = Color3.new(1,1,1)
+iyButton.Font = Enum.Font.GothamBold
+iyButton.TextSize = 15
+iyButton.Parent = scriptsFrame
+Instance.new("UICorner", iyButton).CornerRadius = UDim.new(0, 10)
+
+iyButton.MouseButton1Click:Connect(function()
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+    end)
+    iyButton.BackgroundColor3 = Color3.fromRGB(160, 70, 200)
+    task.wait(0.2)
+    iyButton.BackgroundColor3 = Color3.fromRGB(130, 50, 180)
+end)
+
+-- ========== GLOBAL MOUSE CLICK CAPTURE FOR COORDINATE PICKER ==========
+inputConnection = uis.InputBegan:Connect(function(input, gameProcessed)
+    if waitingForCoordinateClick and input.UserInputType == Enum.UserInputType.MouseButton1 then
+        local mousePos = uis:GetMouseLocation()
+        settings.clickX = mousePos.X
+        settings.clickY = mousePos.Y
+        updateDoActionBtnText()
+        setPosBtn.Text = "🎯 Set Click Position (Click anywhere)"
+        setPosBtn.BackgroundColor3 = Color3.fromRGB(100, 30, 150)
+        waitingForCoordinateClick = false
+        return
+    end
+    
+    if gameProcessed then return end
+    if not enabled then return end
+    
+    if rebindingKey and input.KeyCode ~= Enum.KeyCode.Unknown then
+        settings.keybinds[rebindingKey] = input.KeyCode
+        for _, field in ipairs(keybindFields) do
+            if field.action == rebindingKey then
+                field.keyDisplay.Text = input.KeyCode.Name
+                field.changeBtn.Text = "Change"
+                break
+            end
+        end
+        rebindingKey = nil
+        return
+    end
+    
+    if input.KeyCode == settings.keybinds.execute then
+        doAction()
+    elseif input.KeyCode == settings.keybinds.disable then
+        disableAndCleanup()
+    elseif input.KeyCode == settings.keybinds.toggleMenu then
+        toggleMenu()
+    elseif input.KeyCode == settings.keybinds.clearToys then
+        clearAllToys()
+    end
+end)
+
+closeBtn.MouseButton1Click:Connect(function()
+    menuOpen = false
+    mainFrame.Visible = false
+    lockMouse()
+end)
+
+-- ========== CORE FUNCTIONS ==========
+function disableAndCleanup()
+    enabled = false
+    menuOpen = false
+    mainFrame.Visible = false
+    lockMouse()
+    
+    if inputConnection then
+        inputConnection:Disconnect()
+        inputConnection = nil
+    end
+    
+    if screenGui and screenGui.Parent then
+        screenGui:Destroy()
+    end
+    
+    print("⛔ Script fully disabled, all code stopped, UI removed.")
+end
+
+function toggleMenu()
+    menuOpen = not menuOpen
+    mainFrame.Visible = menuOpen
+    if menuOpen then
+        unlockMouse()
+    else
+        lockMouse()
+    end
+end
+
+-- ========== SAFE INITIALIZATION ==========
+task.wait(0.5)   -- wait for everything to load
+lockMouse()       -- safe now
+
+-- Welcome toast (delayed)
+task.spawn(function()
+    task.wait(0.2)
+    local toast = Instance.new("Frame")
+    toast.Size = UDim2.new(0, 360, 0, 130)
+    toast.Position = UDim2.new(0.5, -180, 0.3, 0)
+    toast.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    toast.BackgroundTransparency = 0.2
+    toast.BorderSizePixel = 0
+    toast.Parent = screenGui
+    Instance.new("UICorner", toast).CornerRadius = UDim.new(0, 14)
+    local toastText = Instance.new("TextLabel")
+    toastText.Size = UDim2.new(1, -20, 1, -20)
+    toastText.Position = UDim2.new(0, 10, 0, 10)
+    toastText.BackgroundTransparency = 1
+    toastText.Text = "🎮 Auto E + Click Script\nPress R → E, Click at set position, E\nM = Menu | Y = Delete All | T = Clear Toys"
+    toastText.TextColor3 = Color3.new(1,1,1)
+    toastText.TextSize = 14
+    toastText.Font = Enum.Font.GothamMedium
+    toastText.TextWrapped = true
+    toastText.Parent = toast
+    task.delay(4, function()
+        if toast and toast.Parent then toast:Destroy() end
+    end)
+end)
+
+print("✅ Auto E + Click Script Loaded! (Crash‑safe)")
