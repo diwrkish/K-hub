@@ -1,67 +1,380 @@
-local H,U,T,P,G=game:GetService("HttpService"),game:GetService("UserInputService"),game:GetService("TweenService"),game:GetService("Players"),game:GetService("GuiService")
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
 
-local function c()print("Debug: Creating ScreenGui")local a=Instance.new("ScreenGui")a.Name="KHubExecutor"a.Parent=P.LocalPlayer:WaitForChild("PlayerGui")a.ResetOnSpawn=false a.IgnoreGuiInset=true return a end
-local a=c()if not a then print("Error: ScreenGui creation failed")return end
+local player = Players.LocalPlayer
 
-local b=Instance.new("Frame")print("Debug: Creating MainFrame")b.Size=UDim2.new(0,450,0,350)b.Position=UDim2.new(0.5,-225,0.5,-175)b.BackgroundColor3=Color3.fromRGB(20,20,20)b.BorderSizePixel=0 b.Parent=a b.Visible=true b.BackgroundTransparency=0.1 b.Active=true b.ClipsDescendants=true
-local c=Instance.new("UIGradient")c.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(20,20,20)),ColorSequenceKeypoint.new(1,Color3.fromRGB(30,30,30))})c.Rotation=45 c.Parent=b
-local d=Instance.new("UIStroke")d.Thickness=2 d.Color=Color3.fromRGB(0,0,0)d.Transparency=0.5 d.Parent=b
-local e=Instance.new("TextLabel")e.Size=UDim2.new(1,0,0,50)e.BackgroundColor3=Color3.fromRGB(10,10,10)e.Text="K Hub Executor"e.TextColor3=Color3.fromRGB(200,200,200)e.TextScaled=true e.Font=Enum.Font.GothamBold e.Parent=b e.BackgroundTransparency=0.2
-local f=Instance.new("TextButton")f.Size=UDim2.new(0,35,0,35)f.Position=UDim2.new(1,-80,0,7.5)f.BackgroundColor3=Color3.fromRGB(40,40,40)f.Text="–"f.TextColor3=Color3.fromRGB(200,200,200)f.TextScaled=true f.Font=Enum.Font.Gotham f.Parent=b f.BackgroundTransparency=0.2 f.AutoButtonColor=true
-local g=Instance.new("TextBox")g.Size=UDim2.new(0.94,0,0.55,0)g.Position=UDim2.new(0.03,0,0.18,0)g.BackgroundColor3=Color3.fromRGB(15,15,15)g.TextColor3=Color3.fromRGB(200,200,200)g.Text="-- Enter your Lua script here"g.MultiLine=true g.ClearTextOnFocus=false g.TextWrapped=true g.Font=Enum.Font.SourceSans g.TextSize=16 g.Parent=b g.BackgroundTransparency=0.3 g.TextXAlignment=Enum.TextXAlignment.Left g.TextYAlignment=Enum.TextYAlignment.Top
-local h=Instance.new("UIStroke")h.Thickness=1 h.Color=Color3.fromRGB(50,50,50)h.Transparency=0.5 h.Parent=g
-local i=Instance.new("TextButton")i.Size=UDim2.new(0.45,0,0.1,0)i.Position=UDim2.new(0.03,0,0.85,0)i.BackgroundColor3=Color3.fromRGB(0,100,0)i.Text="Execute"i.TextColor3=Color3.fromRGB(200,200,200)i.TextScaled=true i.Font=Enum.Font.GothamBold i.Parent=b i.BackgroundTransparency=0.2 i.AutoButtonColor=true
-local j=Instance.new("TextButton")j.Size=UDim2.new(0.45,0,0.1,0)j.Position=UDim2.new(0.52,0,0.85,0)j.BackgroundColor3=Color3.fromRGB(100,0,0)j.Text="Clear"j.TextColor3=Color3.fromRGB(200,200,200)j.TextScaled=true j.Font=Enum.Font.GothamBold j.Parent=b j.BackgroundTransparency=0.2 j.AutoButtonColor=true
-local k=Instance.new("TextButton")k.Size=UDim2.new(0,60,0,60)k.BackgroundColor3=Color3.fromRGB(10,10,10)k.Text="K"k.TextColor3=Color3.fromRGB(200,200,200)k.TextScaled=true k.Font=Enum.Font.GothamBold k.Parent=a k.Visible=false k.BackgroundTransparency=0.3 k.BorderSizePixel=0 k.AutoButtonColor=true k.Active=true
-local l=Instance.new("UICorner")l.CornerRadius=UDim.new(1,0)l.Parent=k
-local m=Instance.new("UIStroke")m.Thickness=2 m.Color=Color3.fromRGB(0,0,0)m.Transparency=0.5 m.Parent=k
+-- Main GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = CoreGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-local function d()print("Debug: Centering CircleButton")if G then local a=G:GetScreenResolution()or Vector2.new(1280,720)local b=k.Size.X.Offset k.Position=UDim2.new(0,(a.X-b)/2,0,(a.Y-b)/2)end end
-d()
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "Executor"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BorderSizePixel = 0
+MainFrame.Size = UDim2.new(0, 500, 0, 420)
+MainFrame.Position = UDim2.new(0.5, -250, 0.5, -210)
+MainFrame.Active = true
+MainFrame.Draggable = false
+MainFrame.ClipsDescendants = true
+MainFrame.Visible = true
 
-local function e(a)if a then print("Debug: Attaching drag to "..tostring(a)) local dragging,dragInput,dragStart,startPos=false,nil,nil,nil a.InputBegan:Connect(function(input)if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then dragging=true dragStart=input.Position startPos=a.Position input.Changed:Connect(function()if input.UserInputState==Enum.UserInputState.End then dragging=false end end)end end)a.InputChanged:Connect(function(input)if input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch then dragInput=input end end)U.InputChanged:Connect(function(input)if input==dragInput and dragging then if input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch then local delta=input.Position - dragStart a.Position=UDim2.new(startPos.X.Scale,startPos.X.Offset + delta.X,startPos.Y.Scale,startPos.Y.Offset + delta.Y)print("Debug: Dragging to "..tostring(a.Position))end end end)else print("Error: Nil frame for drag")end end
-e(b)e(k)
+-- Title bar
+local TitleBar = Instance.new("Frame")
+TitleBar.Name = "TitleBar"
+TitleBar.Parent = MainFrame
+TitleBar.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+TitleBar.BorderSizePixel = 0
+TitleBar.Size = UDim2.new(1, 0, 0, 30)
+TitleBar.Active = true
 
-local n=0 local o=0.3
-k.MouseButton1Click:Connect(function()print("Debug: CircleButton clicked")local a=tick()if a-n<o then b.Visible=true k.Visible=false if T then T:Create(b,TweenInfo.new(0.3),{BackgroundTransparency=0.1}):Play()end end n=a end)
-k.TouchTap:Connect(function()print("Debug: CircleButton touched")local a=tick()if a-n<o then b.Visible=true k.Visible=false if T then T:Create(b,TweenInfo.new(0.3),{BackgroundTransparency=0.1}):Play()end end n=a end)
+local TitleText = Instance.new("TextLabel")
+TitleText.Parent = TitleBar
+TitleText.BackgroundTransparency = 1
+TitleText.Size = UDim2.new(1, -90, 1, 0)
+TitleText.Position = UDim2.new(0, 10, 0, 0)
+TitleText.Font = Enum.Font.GothamBold
+TitleText.Text = "Executor"
+TitleText.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleText.TextSize = 14
+TitleText.TextXAlignment = Enum.TextXAlignment.Left
 
-local function p(a)print("Debug: Executing script")local s,err=pcall(function()loadstring(a)()end)if not s then print("Execution error: "..tostring(err))end end
+local MinimizeButton = Instance.new("TextButton")
+MinimizeButton.Parent = TitleBar
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+MinimizeButton.BorderSizePixel = 0
+MinimizeButton.Size = UDim2.new(0, 30, 0, 30)
+MinimizeButton.Position = UDim2.new(1, -60, 0, 0)
+MinimizeButton.Font = Enum.Font.GothamBold
+MinimizeButton.Text = "_"
+MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeButton.TextSize = 14
+MinimizeButton.AutoButtonColor = false
 
-i.MouseButton1Click:Connect(function()print("Debug: Execute clicked")p(g.Text)end)
-j.MouseButton1Click:Connect(function()print("Debug: Clear clicked")g.Text="-- Enter your Lua script here"end)
-f.MouseButton1Click:Connect(function()print("Debug: Minimize clicked")b.Visible=false k.Visible=true d()if T then T:Create(k,TweenInfo.new(0.3),{BackgroundTransparency=0.3,Size=UDim2.new(0,60,0,60)}):Play()end end)
+local CloseButton = Instance.new("TextButton")
+CloseButton.Parent = TitleBar
+CloseButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+CloseButton.BorderSizePixel = 0
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.Position = UDim2.new(1, -30, 0, 0)
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.Text = "X"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.TextSize = 14
+CloseButton.AutoButtonColor = false
 
-local function q(a)if a and T then print("Debug: Attaching hover to "..tostring(a)) a.MouseEnter:Connect(function()T:Create(a,TweenInfo.new(0.2),{BackgroundColor3=Color3.fromRGB(a.BackgroundColor3.r*255+20,a.BackgroundColor3.g*255+20,a.BackgroundColor3.b*255+20),BackgroundTransparency=0}):Play()end)a.MouseLeave:Connect(function()T:Create(a,TweenInfo.new(0.2),{BackgroundColor3=Color3.fromRGB(a.BackgroundColor3.r*255-20,a.BackgroundColor3.g*255-20,a.BackgroundColor3.b*255-20),BackgroundTransparency=0.2}):Play()end)a.TouchTap:Connect(function()T:Create(a,TweenInfo.new(0.1),{BackgroundColor3=Color3.fromRGB(a.BackgroundColor3.r*255+20,a.BackgroundColor3.g*255+20,a.BackgroundColor3.b*255+20),BackgroundTransparency=0}):Play()wait(0.1)T:Create(a,TweenInfo.new(0.1),{BackgroundColor3=Color3.fromRGB(a.BackgroundColor3.r*255-20,a.BackgroundColor3.g*255-20,a.BackgroundColor3.b*255-20),BackgroundTransparency=0.2}):Play()end)else print("Error: Nil button for hover")end end
-q(i)q(j)q(f)q(k)
+-- Single tab "Scripts"
+local ScriptsTab = Instance.new("Frame")
+ScriptsTab.Parent = MainFrame
+ScriptsTab.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+ScriptsTab.BorderSizePixel = 0
+ScriptsTab.Position = UDim2.new(0, 0, 0, 30)
+ScriptsTab.Size = UDim2.new(1, 0, 0, 30)
 
-local function r(a)print("[K Hub Executor Error]: "..a)end
+local ScriptsTabLabel = Instance.new("TextLabel")
+ScriptsTabLabel.Parent = ScriptsTab
+ScriptsTabLabel.BackgroundTransparency = 1
+ScriptsTabLabel.Size = UDim2.new(1, 0, 1, 0)
+ScriptsTabLabel.Font = Enum.Font.GothamBold
+ScriptsTabLabel.Text = "Scripts"
+ScriptsTabLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+ScriptsTabLabel.TextSize = 14
+ScriptsTabLabel.TextXAlignment = Enum.TextXAlignment.Center
 
-local function s()local a=getrawmetatable(game)if a then local b=a.__index setrawmetatable(game,{__index=function(a,c)if c=="GetService"then return function(a,d)r("Service access detected: "..d)return b(a,d)end end return b(a,c)end})else print("Error: Metatable not found")end end
-s()
+-- Content area below tab
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Parent = MainFrame
+ContentFrame.BackgroundTransparency = 1
+ContentFrame.Position = UDim2.new(0, 10, 0, 65)
+ContentFrame.Size = UDim2.new(1, -20, 1, -105) -- leaving room for keybind bar
 
-local function t(a)if a and a.Parent then print("Debug: Notifying: "..a) local b=Instance.new("TextLabel")b.Size=UDim2.new(0,250,0,50)b.Position=UDim2.new(1,-260,0,10)b.BackgroundColor3=Color3.fromRGB(10,10,10)b.TextColor3=Color3.fromRGB(200,200,200)b.Text=a b.TextScaled=true b.Font=Enum.Font.Gotham b.BackgroundTransparency=0.3 b.Parent=a local c=Instance.new("UIStroke")c.Thickness=1 c.Color=Color3.fromRGB(50,50,50)c.Transparency=0.5 c.Parent=b if T then local c=T:Create(b,TweenInfo.new(3),{BackgroundTransparency=1,TextTransparency=1})c:Play()wait(3)b:Destroy()else print("Error: TweenService nil")end else print("Error: Nil parent for notification")end end
-coroutine.resume(coroutine.create(function()wait(0.2)if a then t("K Hub Executor Loaded!")end end))
+-- Pre-made script buttons
+local InfiniteYieldButton = Instance.new("TextButton")
+InfiniteYieldButton.Parent = ContentFrame
+InfiniteYieldButton.BackgroundColor3 = Color3.fromRGB(0, 140, 100)
+InfiniteYieldButton.BorderSizePixel = 0
+InfiniteYieldButton.Position = UDim2.new(0, 0, 0, 0)
+InfiniteYieldButton.Size = UDim2.new(1, 0, 0, 35)
+InfiniteYieldButton.Font = Enum.Font.GothamBold
+InfiniteYieldButton.Text = "Infinite Yield"
+InfiniteYieldButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+InfiniteYieldButton.TextSize = 14
+InfiniteYieldButton.AutoButtonColor = false
 
-local u=Instance.new("Frame")u.Size=UDim2.new(0.94,0,0.55,0)u.Position=UDim2.new(0.03,0,0.18,0)u.BackgroundColor3=Color3.fromRGB(15,15,15)u.BackgroundTransparency=0.3 u.Parent=b u.Visible=false
-local v=Instance.new("TextButton")v.Size=UDim2.new(0.45,0,0.3,0)v.Position=UDim2.new(0.03,0,0.1,0)v.BackgroundColor3=Color3.fromRGB(0,50,100)v.Text="Infinite Yield"v.TextColor3=Color3.fromRGB(200,200,200)v.TextScaled=true v.Font=Enum.Font.GothamBold v.Parent=u v.BackgroundTransparency=0.2 v.AutoButtonColor=true
-local w=Instance.new("TextButton")w.Size=UDim2.new(0.45,0,0.3,0)w.Position=UDim2.new(0.52,0,0.1,0)w.BackgroundColor3=Color3.fromRGB(0,50,100)w.Text="LALOL Hub"w.TextColor3=Color3.fromRGB(200,200,200)w.TextScaled=true w.Font=Enum.Font.GothamBold w.Parent=u w.BackgroundTransparency=0.2 w.AutoButtonColor=true
-local x=Instance.new("TextButton")x.Size=UDim2.new(0,50,0,30)x.Position=UDim2.new(0.03,0,0.03,0)x.BackgroundColor3=Color3.fromRGB(40,40,40)x.Text="Scripts"x.TextColor3=Color3.fromRGB(200,200,200)x.TextScaled=true x.Font=Enum.Font.Gotham x.Parent=b x.BackgroundTransparency=0.2 x.AutoButtonColor=true
-local y=Instance.new("TextButton")y.Size=UDim2.new(0.45,0,0.3,0)y.Position=UDim2.new(0.03,0,0.4,0)y.BackgroundColor3=Color3.fromRGB(0,50,100)y.Text="iy reborn"y.TextColor3=Color3.fromRGB(200,200,200)y.TextScaled=true y.Font=Enum.Font.GothamBold y.Parent=u y.BackgroundTransparency=0.2 y.AutoButtonColor=true
-local z=Instance.new("TextButton")z.Size=UDim2.new(0.45,0,0.3,0)z.Position=UDim2.new(0.52,0,0.4,0)z.BackgroundColor3=Color3.fromRGB(0,50,100)z.Text="zephyr hub"z.TextColor3=Color3.fromRGB(200,200,200)z.TextScaled=true z.Font=Enum.Font.GothamBold z.Parent=u z.BackgroundTransparency=0.2 z.AutoButtonColor=true
+InfiniteYieldButton.MouseButton1Click:Connect(function()
+	local success, err = pcall(function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+	end)
+	if not success then warn("Infinite Yield error: " .. tostring(err)) end
+end)
 
-x.MouseButton1Click:Connect(function()print("Debug: Switching tabs")g.Visible=not g.Visible u.Visible=not u.Visible end)
-v.MouseButton1Click:Connect(function()print("Debug: Loading Infinite Yield")p('loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()')end)
-w.MouseButton1Click:Connect(function()print("Debug: Loading LALOL Hub")p("loadstring(game:HttpGet('https://raw.githubusercontent.com/Its-LALOL/LALOL-Hub/main/Backdoor-Scanner/script'))()")end)
-y.MouseButton1Click:Connect(function()print("Debug: Loading iy reborn")p('loadstring(game:HttpGet(("https://raw.githubusercontent.com/mxsynry/infiniteyield-reborn/refs/heads/scriptblox/source" or "https://mxsynry.github.io/storage/iyrbackup/legacy/scriptblox/source")))()')end)
-z.MouseButton1Click:Connect(function()print("Debug: Loading zephyr hub")p('loadstring(game:HttpGet("https://pandadevelopment.net/virtual/file/7903e37c198ca203"))()')end)
+local KHubButton = Instance.new("TextButton")
+KHubButton.Parent = ContentFrame
+KHubButton.BackgroundColor3 = Color3.fromRGB(0, 140, 100)
+KHubButton.BorderSizePixel = 0
+KHubButton.Position = UDim2.new(0, 0, 0, 40)
+KHubButton.Size = UDim2.new(1, 0, 0, 35)
+KHubButton.Font = Enum.Font.GothamBold
+KHubButton.Text = "K Hub"
+KHubButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+KHubButton.TextSize = 14
+KHubButton.AutoButtonColor = false
 
-U.InputBegan:Connect(function(a,b)if not b and a.UserInputType==Enum.UserInputType.Keyboard and a.KeyCode==Enum.KeyCode.E and U:IsKeyDown(Enum.KeyCode.LeftControl)then print("Debug: Toggle hotkey pressed")b.Visible=not b.Visible k.Visible=not b.Visible if k.Visible then d()end end end)
+KHubButton.MouseButton1Click:Connect(function()
+	local success, err = pcall(function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/diwrkish/K-hub/refs/heads/main/K%20hub?token=GHSAT0AAAAAAEDEM37UPHIOSCQQEA2QXVUM2TRWK2Q"))()
+	end)
+	if not success then warn("K Hub error: " .. tostring(err)) end
+end)
 
-local function A()if U.TouchEnabled and b then print("Debug: Adjusting for mobile") b.Size=UDim2.new(0.85,0,0.65,0)b.Position=UDim2.new(0.5,-b.Size.X.Offset/2,0.5,-b.Size.Y.Offset/2)g.TextSize=18 i.TextSize=20 j.TextSize=20 f.TextSize=20 x.TextSize=18 v.TextSize=18 w.TextSize=18 y.TextSize=18 z.TextSize=18 if a then t("Mobile mode detected: UI scaled for touch.")end end end
-A()
+-- Custom script input
+local ScriptBox = Instance.new("TextBox")
+ScriptBox.Parent = ContentFrame
+ScriptBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+ScriptBox.BorderSizePixel = 0
+ScriptBox.Position = UDim2.new(0, 0, 0, 85)
+ScriptBox.Size = UDim2.new(1, 0, 1, -130)
+ScriptBox.Font = Enum.Font.Code
+ScriptBox.Text = "-- Enter script here"
+ScriptBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+ScriptBox.TextSize = 14
+ScriptBox.TextXAlignment = Enum.TextXAlignment.Left
+ScriptBox.TextYAlignment = Enum.TextYAlignment.Top
+ScriptBox.MultiLine = true
+ScriptBox.ClearTextOnFocus = false
 
-g.Text=[[
-print("K Hub Executor: Test script executed!")
-game.Players.LocalPlayer.Character.Humanoid.JumpPower=100
-]]
+-- Execute and Clear buttons
+local ExecuteButton = Instance.new("TextButton")
+ExecuteButton.Parent = ContentFrame
+ExecuteButton.BackgroundColor3 = Color3.fromRGB(0, 170, 100)
+ExecuteButton.BorderSizePixel = 0
+ExecuteButton.Position = UDim2.new(0, 0, 1, -35)
+ExecuteButton.Size = UDim2.new(0.6, -5, 0, 30)
+ExecuteButton.Font = Enum.Font.GothamBold
+ExecuteButton.Text = "Execute"
+ExecuteButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ExecuteButton.TextSize = 14
+ExecuteButton.AutoButtonColor = false
+
+local ClearButton = Instance.new("TextButton")
+ClearButton.Parent = ContentFrame
+ClearButton.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+ClearButton.BorderSizePixel = 0
+ClearButton.Position = UDim2.new(0.6, 5, 1, -35)
+ClearButton.Size = UDim2.new(0.4, -5, 0, 30)
+ClearButton.Font = Enum.Font.GothamBold
+ClearButton.Text = "Clear"
+ClearButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ClearButton.TextSize = 14
+ClearButton.AutoButtonColor = false
+
+ClearButton.MouseButton1Click:Connect(function()
+	ScriptBox.Text = ""
+end)
+
+ExecuteButton.MouseButton1Click:Connect(function()
+	local scriptText = ScriptBox.Text
+	local success, err = pcall(function()
+		local func = loadstring(scriptText)
+		if func then func() else warn("Invalid script") end
+	end)
+	if not success then warn("Execution error: " .. tostring(err)) end
+end)
+
+-- Keybind bar at bottom
+local KeybindFrame = Instance.new("Frame")
+KeybindFrame.Parent = MainFrame
+KeybindFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+KeybindFrame.BorderSizePixel = 0
+KeybindFrame.Position = UDim2.new(0, 0, 1, -40)
+KeybindFrame.Size = UDim2.new(1, 0, 0, 40)
+
+local KeybindLabel = Instance.new("TextLabel")
+KeybindLabel.Parent = KeybindFrame
+KeybindLabel.BackgroundTransparency = 1
+KeybindLabel.Size = UDim2.new(0, 100, 1, 0)
+KeybindLabel.Position = UDim2.new(0, 5, 0, 0)
+KeybindLabel.Font = Enum.Font.Gotham
+KeybindLabel.Text = "Toggle Key:"
+KeybindLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+KeybindLabel.TextSize = 14
+KeybindLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local CurrentKeybind = Instance.new("TextButton")
+CurrentKeybind.Parent = KeybindFrame
+CurrentKeybind.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+CurrentKeybind.BorderSizePixel = 0
+CurrentKeybind.Position = UDim2.new(0, 110, 0, 7)
+CurrentKeybind.Size = UDim2.new(0, 100, 0, 26)
+CurrentKeybind.Font = Enum.Font.GothamBold
+CurrentKeybind.Text = "RightShift"
+CurrentKeybind.TextColor3 = Color3.fromRGB(255, 255, 255)
+CurrentKeybind.TextSize = 14
+CurrentKeybind.AutoButtonColor = false
+
+local ChangeBindButton = Instance.new("TextButton")
+ChangeBindButton.Parent = KeybindFrame
+ChangeBindButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+ChangeBindButton.BorderSizePixel = 0
+ChangeBindButton.Position = UDim2.new(0, 220, 0, 7)
+ChangeBindButton.Size = UDim2.new(0, 70, 0, 26)
+ChangeBindButton.Font = Enum.Font.Gotham
+ChangeBindButton.Text = "Change"
+ChangeBindButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ChangeBindButton.TextSize = 14
+ChangeBindButton.AutoButtonColor = false
+
+-- Drag, resize, minimize logic
+local dragging = false
+local dragStartPos, frameStartPos
+local resizing = false
+local resizeStartSize, resizeStartMousePos
+local minSize = Vector2.new(300, 300)
+
+local function startDrag(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		local pos = input.Position
+		if TitleBar.AbsolutePosition.X <= pos.X and pos.X <= TitleBar.AbsolutePosition.X + TitleBar.AbsoluteSize.X
+			and TitleBar.AbsolutePosition.Y <= pos.Y and pos.Y <= TitleBar.AbsolutePosition.Y + TitleBar.AbsoluteSize.Y then
+			dragging = true
+			dragStartPos = pos
+			frameStartPos = MainFrame.Position
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then dragging = false end
+			end)
+		end
+	end
+end
+
+local function onDrag(input)
+	if dragging then
+		local delta = input.Position - dragStartPos
+		MainFrame.Position = UDim2.new(
+			frameStartPos.X.Scale,
+			frameStartPos.X.Offset + delta.X,
+			frameStartPos.Y.Scale,
+			frameStartPos.Y.Offset + delta.Y
+		)
+	end
+end
+
+local ResizeHandle = Instance.new("TextButton")
+ResizeHandle.Parent = MainFrame
+ResizeHandle.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+ResizeHandle.BorderSizePixel = 0
+ResizeHandle.Size = UDim2.new(0, 20, 0, 20)
+ResizeHandle.Position = UDim2.new(1, -20, 1, -20)
+ResizeHandle.Text = ""
+ResizeHandle.AutoButtonColor = false
+ResizeHandle.ZIndex = 2
+
+local function startResize(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		local pos = input.Position
+		local hPos = ResizeHandle.AbsolutePosition
+		local hSize = ResizeHandle.AbsoluteSize
+		if pos.X >= hPos.X and pos.X <= hPos.X + hSize.X and pos.Y >= hPos.Y and pos.Y <= hPos.Y + hSize.Y then
+			resizing = true
+			resizeStartMousePos = pos
+			resizeStartSize = MainFrame.AbsoluteSize
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then resizing = false end
+			end)
+		end
+	end
+end
+
+local function onResize(input)
+	if resizing then
+		local delta = input.Position - resizeStartMousePos
+		local newW = math.max(minSize.X, resizeStartSize.X + delta.X)
+		local newH = math.max(minSize.Y, resizeStartSize.Y + delta.Y)
+		MainFrame.Size = UDim2.new(0, newW, 0, newH)
+	end
+end
+
+MainFrame.InputBegan:Connect(function(input)
+	startDrag(input)
+	startResize(input)
+end)
+UserInputService.InputChanged:Connect(function(input)
+	onDrag(input)
+	onResize(input)
+end)
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = false
+		resizing = false
+	end
+end)
+
+-- Minimize/Maximize
+local minimized = false
+local normalSize, normalPosition
+MinimizeButton.MouseButton1Click:Connect(function()
+	if not minimized then
+		normalSize = MainFrame.Size
+		normalPosition = MainFrame.Position
+		MainFrame.Size = UDim2.new(0, 250, 0, 30)
+		ContentFrame.Visible = false
+		KeybindFrame.Visible = false
+		ResizeHandle.Visible = false
+		ScriptsTab.Visible = false
+		minimized = true
+	else
+		MainFrame.Size = normalSize
+		MainFrame.Position = normalPosition
+		ContentFrame.Visible = true
+		KeybindFrame.Visible = true
+		ResizeHandle.Visible = true
+		ScriptsTab.Visible = true
+		minimized = false
+	end
+end)
+
+-- Toggle UI with keybind
+local isOpen = true
+local toggleKey = Enum.KeyCode.RightShift
+
+local function toggleUI()
+	isOpen = not isOpen
+	MainFrame.Visible = isOpen
+end
+
+CloseButton.MouseButton1Click:Connect(function()
+	MainFrame.Visible = false
+	isOpen = false
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end
+	if input.KeyCode == toggleKey then
+		toggleUI()
+	end
+end)
+
+-- Change keybind
+local waitingForKey = false
+ChangeBindButton.MouseButton1Click:Connect(function()
+	waitingForKey = true
+	CurrentKeybind.Text = "..."
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if waitingForKey and not gameProcessed then
+		if input.KeyCode ~= Enum.KeyCode.Unknown then
+			toggleKey = input.KeyCode
+			CurrentKeybind.Text = input.KeyCode.Name
+			waitingForKey = false
+		end
+	end
+end)
+
+-- Touch drag on title bar for mobile
+TitleBar.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.Touch then
+		startDrag(input)
+	end
+end)
