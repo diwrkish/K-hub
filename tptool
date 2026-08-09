@@ -1,0 +1,124 @@
+-- Teleport Script (X Y Z format)
+-- Press T to toggle GUI, enter coordinates and click Teleport
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local userInput = game:GetService("UserInputService")
+
+-- Create GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = game.CoreGui
+screenGui.ResetOnSpawn = false
+screenGui.Enabled = false  -- hidden by default
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 300, 0, 120)
+frame.Position = UDim2.new(0.5, -150, 0.5, -60)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BackgroundTransparency = 0.1
+frame.BorderSizePixel = 0
+frame.Parent = screenGui
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "Teleport to Coordinates"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextScaled = true
+title.Font = Enum.Font.SourceSansBold
+title.Parent = frame
+
+local inputBox = Instance.new("TextBox")
+inputBox.Size = UDim2.new(1, -20, 0, 30)
+inputBox.Position = UDim2.new(0, 10, 0, 35)
+inputBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+inputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+inputBox.Text = "X Y Z"
+inputBox.TextScaled = true
+inputBox.Font = Enum.Font.SourceSans
+inputBox.ClearTextOnFocus = false
+inputBox.Parent = frame
+
+local teleportBtn = Instance.new("TextButton")
+teleportBtn.Size = UDim2.new(1, -20, 0, 30)
+teleportBtn.Position = UDim2.new(0, 10, 0, 75)
+teleportBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+teleportBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+teleportBtn.Text = "Teleport"
+teleportBtn.TextScaled = true
+teleportBtn.Font = Enum.Font.SourceSansBold
+teleportBtn.Parent = frame
+
+-- Toggle GUI with T key
+local guiVisible = false
+userInput.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.T then
+        guiVisible = not guiVisible
+        screenGui.Enabled = guiVisible
+        if guiVisible then
+            inputBox:CaptureFocus()
+        end
+    end
+end)
+
+-- Teleport function
+local function teleportTo(coords)
+    local parts = {}
+    for word in coords:gmatch("%S+") do
+        table.insert(parts, tonumber(word))
+    end
+    if #parts ~= 3 then
+        teleportBtn.Text = "Need X Y Z!"
+        task.wait(1)
+        teleportBtn.Text = "Teleport"
+        return
+    end
+    local x, y, z = parts[1], parts[2], parts[3]
+    if x == nil or y == nil or z == nil then
+        teleportBtn.Text = "Invalid number!"
+        task.wait(1)
+        teleportBtn.Text = "Teleport"
+        return
+    end
+    
+    local char = player.Character
+    if not char then
+        teleportBtn.Text = "No character!"
+        task.wait(1)
+        teleportBtn.Text = "Teleport"
+        return
+    end
+    
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if root then
+        root.CFrame = CFrame.new(x, y, z)
+        teleportBtn.Text = "Teleported!"
+        task.wait(0.5)
+        teleportBtn.Text = "Teleport"
+    else
+        teleportBtn.Text = "No root part!"
+        task.wait(1)
+        teleportBtn.Text = "Teleport"
+    end
+end
+
+teleportBtn.MouseButton1Click:Connect(function()
+    local coords = inputBox.Text
+    teleportTo(coords)
+end)
+
+-- Also allow pressing Enter in the text box
+inputBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        teleportTo(inputBox.Text)
+    end
+end)
+
+-- Handle character respawn
+player.CharacterAdded:Connect(function(newChar)
+    character = newChar
+end)
+
+print("✅ Teleport script loaded! Press T to toggle GUI")
+print("📌 Enter coordinates as: X Y Z (e.g., 82.5 765.8 -127.8)")
