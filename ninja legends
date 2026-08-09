@@ -1,0 +1,805 @@
+print("made my iroro1233")
+--[[
+	Script Name: Ninja Auto Farm & Teleport GUI
+	Description: Premium dark-themed GUI with tabs for auto-farming and teleporting.
+	Features: Close/Minimize buttons, keybind system, apply button for config, ALL islands included.
+]]
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+-- Services for teleporting (adjust remote event names as needed)
+local TeleportEvent = game:GetService("ReplicatedStorage"):FindFirstChild("TeleportEvent")
+
+-- Create ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+
+-- Main Frame
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 540, 0, 540)
+MainFrame.Position = UDim2.new(0.5, -270, 0.5, -270)
+MainFrame.BackgroundColor3 = Color3.fromRGB(16, 16, 20)
+MainFrame.BackgroundTransparency = 0
+MainFrame.BorderSizePixel = 0
+MainFrame.ClipsDescendants = true
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+-- Shadow with blur effect
+local Shadow = Instance.new("ImageLabel")
+Shadow.Size = UDim2.new(1, 30, 1, 30)
+Shadow.Position = UDim2.new(0, -15, 0, -15)
+Shadow.BackgroundTransparency = 1
+Shadow.Image = "rbxassetid://1316045250"
+Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+Shadow.ImageTransparency = 0.5
+Shadow.ZIndex = 0
+Shadow.Parent = MainFrame
+
+-- Rounded corners
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = MainFrame
+
+-- Title Bar with gradient effect
+local TitleBar = Instance.new("Frame")
+TitleBar.Size = UDim2.new(1, 0, 0, 50)
+TitleBar.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
+TitleBar.BackgroundTransparency = 0
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = MainFrame
+
+local TitleBarCorner = Instance.new("UICorner")
+TitleBarCorner.CornerRadius = UDim.new(0, 12)
+TitleBarCorner.Parent = TitleBar
+
+-- Gradient overlay for title bar
+local Gradient = Instance.new("ImageLabel")
+Gradient.Size = UDim2.new(1, 0, 1, 0)
+Gradient.BackgroundTransparency = 1
+Gradient.Image = "rbxassetid://2151741365"
+Gradient.ImageColor3 = Color3.fromRGB(30, 30, 40)
+Gradient.ImageTransparency = 0.5
+Gradient.Parent = TitleBar
+
+-- Title
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(0.6, 0, 1, 0)
+Title.Position = UDim2.new(0.04, 0, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "NINJA HUB"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextScaled = true
+Title.Font = Enum.Font.GothamBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TitleBar
+
+-- Title glow
+local TitleGlow = Instance.new("TextLabel")
+TitleGlow.Size = UDim2.new(0.6, 0, 1, 0)
+TitleGlow.Position = UDim2.new(0.04, 0, 0, 0)
+TitleGlow.BackgroundTransparency = 1
+TitleGlow.Text = "NINJA HUB"
+TitleGlow.TextColor3 = Color3.fromRGB(0, 180, 255)
+TitleGlow.TextScaled = true
+TitleGlow.Font = Enum.Font.GothamBold
+TitleGlow.TextXAlignment = Enum.TextXAlignment.Left
+TitleGlow.TextTransparency = 0.7
+TitleGlow.Parent = TitleBar
+
+local AccentLine = Instance.new("Frame")
+AccentLine.Size = UDim2.new(0.3, 0, 0, 2)
+AccentLine.Position = UDim2.new(0.04, 0, 1, -2)
+AccentLine.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
+AccentLine.BackgroundTransparency = 0
+AccentLine.BorderSizePixel = 0
+AccentLine.Parent = TitleBar
+
+-- Control Buttons with hover effects
+local function createControlButton(text, color, position)
+	local button = Instance.new("TextButton")
+	button.Size = UDim2.new(0, 34, 0, 34)
+	button.Position = position
+	button.Text = text
+	button.TextColor3 = color
+	button.TextSize = 20
+	button.TextXAlignment = Enum.TextXAlignment.Center
+	button.BackgroundColor3 = Color3.fromRGB(45, 45, 52)
+	button.BackgroundTransparency = 0
+	button.BorderSizePixel = 0
+	button.Parent = TitleBar
+	
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 6)
+	corner.Parent = button
+	
+	button.MouseEnter:Connect(function()
+		TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(55, 55, 62)}):Play()
+	end)
+	button.MouseLeave:Connect(function()
+		TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(45, 45, 52)}):Play()
+	end)
+	
+	return button
+end
+
+local MinimizeButton = createControlButton("−", Color3.fromRGB(200, 200, 200), UDim2.new(1, -85, 0.5, -17))
+local CloseButton = createControlButton("✕", Color3.fromRGB(255, 80, 80), UDim2.new(1, -45, 0.5, -17))
+
+-- Tab Buttons with better styling
+local TabButtonsFrame = Instance.new("Frame")
+TabButtonsFrame.Size = UDim2.new(1, 0, 0, 50)
+TabButtonsFrame.Position = UDim2.new(0, 0, 0, 50)
+TabButtonsFrame.BackgroundTransparency = 1
+TabButtonsFrame.Parent = MainFrame
+
+local function createTabButton(name, position)
+	local button = Instance.new("TextButton")
+	button.Size = UDim2.new(0, 145, 1, 0)
+	button.Position = UDim2.new(position, 0, 0, 0)
+	button.Text = name
+	button.BackgroundColor3 = Color3.fromRGB(40, 40, 48)
+	button.BackgroundTransparency = 0.3
+	button.TextColor3 = Color3.fromRGB(150, 150, 165)
+	button.BorderSizePixel = 0
+	button.Font = Enum.Font.GothamSemibold
+	button.TextSize = 15
+	button.Parent = TabButtonsFrame
+	
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 8)
+	corner.Parent = button
+	
+	local accent = Instance.new("Frame")
+	accent.Size = UDim2.new(0.7, 0, 0, 3)
+	accent.Position = UDim2.new(0.15, 0, 1, 0)
+	accent.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
+	accent.BackgroundTransparency = 1
+	accent.BorderSizePixel = 0
+	accent.Parent = button
+	
+	button.MouseEnter:Connect(function()
+		TweenService:Create(button, TweenInfo.new(0.15), {BackgroundTransparency = 0}):Play()
+	end)
+	button.MouseLeave:Connect(function()
+		if button.BackgroundTransparency ~= 0 then
+			TweenService:Create(button, TweenInfo.new(0.15), {BackgroundTransparency = 0.3}):Play()
+		end
+	end)
+	
+	return button, accent
+end
+
+local MainTabButton, MainAccent = createTabButton("MAIN", 0)
+local ConfigTabButton, ConfigAccent = createTabButton("CONFIG", 0.28)
+local TeleportTabButton, TeleportAccent = createTabButton("TELEPORT", 0.56)
+
+-- Tab Content Frames
+local MainContent = Instance.new("Frame")
+MainContent.Size = UDim2.new(1, -24, 1, -130)
+MainContent.Position = UDim2.new(0, 12, 0, 110)
+MainContent.BackgroundTransparency = 1
+MainContent.Parent = MainFrame
+
+local ConfigContent = Instance.new("Frame")
+ConfigContent.Size = UDim2.new(1, -24, 1, -130)
+ConfigContent.Position = UDim2.new(0, 12, 0, 110)
+ConfigContent.BackgroundTransparency = 1
+ConfigContent.Visible = false
+ConfigContent.Parent = MainFrame
+
+local TeleportContent = Instance.new("Frame")
+TeleportContent.Size = UDim2.new(1, -24, 1, -130)
+TeleportContent.Position = UDim2.new(0, 12, 0, 110)
+TeleportContent.BackgroundTransparency = 1
+TeleportContent.Visible = false
+TeleportContent.Parent = MainFrame
+
+-- Tab Switching
+local function switchTab(tab)
+	MainContent.Visible = (tab == "Main")
+	ConfigContent.Visible = (tab == "Config")
+	TeleportContent.Visible = (tab == "Teleport")
+	
+	local tabs = {
+		{btn = MainTabButton, accent = MainAccent},
+		{btn = ConfigTabButton, accent = ConfigAccent},
+		{btn = TeleportTabButton, accent = TeleportAccent}
+	}
+	
+	for _, t in ipairs(tabs) do
+		t.btn.BackgroundTransparency = 0.3
+		t.btn.TextColor3 = Color3.fromRGB(150, 150, 165)
+		t.accent.BackgroundTransparency = 1
+	end
+	
+	if tab == "Main" then
+		MainTabButton.BackgroundTransparency = 0
+		MainTabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+		MainAccent.BackgroundTransparency = 0
+	elseif tab == "Config" then
+		ConfigTabButton.BackgroundTransparency = 0
+		ConfigTabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+		ConfigAccent.BackgroundTransparency = 0
+	elseif tab == "Teleport" then
+		TeleportTabButton.BackgroundTransparency = 0
+		TeleportTabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+		TeleportAccent.BackgroundTransparency = 0
+	end
+end
+
+MainTabButton.MouseButton1Click:Connect(function() switchTab("Main") end)
+ConfigTabButton.MouseButton1Click:Connect(function() switchTab("Config") end)
+TeleportTabButton.MouseButton1Click:Connect(function() switchTab("Teleport") end)
+
+-- ##############################
+-- MINIMIZE / CLOSE
+-- ##############################
+
+local minimized = false
+local originalSize = MainFrame.Size
+
+MinimizeButton.MouseButton1Click:Connect(function()
+	minimized = not minimized
+	if minimized then
+		TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 540, 0, 50)}):Play()
+		MinimizeButton.Text = "□"
+	else
+		TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size = originalSize}):Play()
+		MinimizeButton.Text = "−"
+	end
+end)
+
+local function closeGUI(permanent)
+	if permanent then
+		TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {BackgroundTransparency = 1, Size = UDim2.new(0, 540, 0, 50)}):Play()
+		task.wait(0.3)
+		ScreenGui:Destroy()
+	else
+		MainFrame.Visible = not MainFrame.Visible
+		if MainFrame.Visible then
+			TweenService:Create(MainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundTransparency = 0}):Play()
+		end
+	end
+end
+
+CloseButton.MouseButton1Click:Connect(function() closeGUI(true) end)
+
+-- ##############################
+-- KEYBIND SYSTEM
+-- ##############################
+
+local keybind = Enum.KeyCode.RightControl
+local isWaitingForKey = false
+
+-- ##############################
+-- MAIN TAB
+-- ##############################
+
+local FarmButton = Instance.new("TextButton")
+FarmButton.Size = UDim2.new(0, 240, 0, 60)
+FarmButton.Position = UDim2.new(0.5, -120, 0.5, -30)
+FarmButton.Text = "START FARMING"
+FarmButton.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+FarmButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+FarmButton.TextSize = 18
+FarmButton.Font = Enum.Font.GothamBold
+FarmButton.BorderSizePixel = 0
+FarmButton.Parent = MainContent
+
+local FarmCorner = Instance.new("UICorner")
+FarmCorner.CornerRadius = UDim.new(0, 10)
+FarmCorner.Parent = FarmButton
+
+-- Glow effect
+local Glow = Instance.new("ImageLabel")
+Glow.Size = UDim2.new(1.3, 0, 1.3, 0)
+Glow.Position = UDim2.new(-0.15, 0, -0.15, 0)
+Glow.BackgroundTransparency = 1
+Glow.Image = "rbxassetid://1316045250"
+Glow.ImageColor3 = Color3.fromRGB(0, 150, 255)
+Glow.ImageTransparency = 0.6
+Glow.ZIndex = 0
+Glow.Parent = FarmButton
+
+-- Pulse animation for glow
+local function pulseGlow()
+	while FarmButton and FarmButton.Parent do
+		local glowColor = Farming and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(0, 150, 255)
+		local transparency = Farming and 0.3 or 0.6
+		TweenService:Create(Glow, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+			ImageTransparency = transparency + 0.3,
+			ImageColor3 = glowColor
+		}):Play()
+		task.wait(1)
+		TweenService:Create(Glow, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+			ImageTransparency = transparency,
+			ImageColor3 = glowColor
+		}):Play()
+		task.wait(1)
+	end
+end
+
+coroutine.wrap(pulseGlow)()
+
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Size = UDim2.new(1, 0, 0, 30)
+StatusLabel.Position = UDim2.new(0, 0, 1, 10)
+StatusLabel.Text = "STATUS: IDLE"
+StatusLabel.TextColor3 = Color3.fromRGB(130, 130, 145)
+StatusLabel.TextSize = 13
+StatusLabel.Font = Enum.Font.Gotham
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Parent = FarmButton
+
+local Farming = false
+local FarmLoop = nil
+local currentDelay = 0.1
+
+-- ##############################
+-- CONFIG TAB
+-- ##############################
+
+local ConfigFrame = Instance.new("Frame")
+ConfigFrame.Size = UDim2.new(1, 0, 1, 0)
+ConfigFrame.BackgroundTransparency = 1
+ConfigFrame.Parent = ConfigContent
+
+-- Delay setting
+local DelayLabel = Instance.new("TextLabel")
+DelayLabel.Size = UDim2.new(0, 200, 0, 35)
+DelayLabel.Position = UDim2.new(0.5, -250, 0.15, 0)
+DelayLabel.Text = "ATTACK DELAY (SECONDS)"
+DelayLabel.TextColor3 = Color3.fromRGB(200, 200, 215)
+DelayLabel.TextSize = 14
+DelayLabel.Font = Enum.Font.GothamSemibold
+DelayLabel.BackgroundTransparency = 1
+DelayLabel.TextXAlignment = Enum.TextXAlignment.Right
+DelayLabel.Parent = ConfigFrame
+
+local DelayBox = Instance.new("TextBox")
+DelayBox.Size = UDim2.new(0, 120, 0, 40)
+DelayBox.Position = UDim2.new(0.5, 50, 0.15, 0)
+DelayBox.PlaceholderText = "0.1"
+DelayBox.Text = "0.1"
+DelayBox.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
+DelayBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+DelayBox.TextSize = 16
+DelayBox.Font = Enum.Font.Gotham
+DelayBox.BorderSizePixel = 0
+DelayBox.Parent = ConfigFrame
+
+local DelayBoxCorner = Instance.new("UICorner")
+DelayBoxCorner.CornerRadius = UDim.new(0, 6)
+DelayBoxCorner.Parent = DelayBox
+
+-- Keybind setting
+local KeybindLabel = Instance.new("TextLabel")
+KeybindLabel.Size = UDim2.new(0, 200, 0, 35)
+KeybindLabel.Position = UDim2.new(0.5, -250, 0.35, 0)
+KeybindLabel.Text = "TOGGLE KEYBIND"
+KeybindLabel.TextColor3 = Color3.fromRGB(200, 200, 215)
+KeybindLabel.TextSize = 14
+KeybindLabel.Font = Enum.Font.GothamSemibold
+KeybindLabel.BackgroundTransparency = 1
+KeybindLabel.TextXAlignment = Enum.TextXAlignment.Right
+KeybindLabel.Parent = ConfigFrame
+
+local KeybindButton = Instance.new("TextButton")
+KeybindButton.Size = UDim2.new(0, 120, 0, 40)
+KeybindButton.Position = UDim2.new(0.5, 50, 0.35, 0)
+KeybindButton.Text = "RCONTROL"
+KeybindButton.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
+KeybindButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeybindButton.TextSize = 14
+KeybindButton.Font = Enum.Font.GothamBold
+KeybindButton.BorderSizePixel = 0
+KeybindButton.Parent = ConfigFrame
+
+local KeybindCorner = Instance.new("UICorner")
+KeybindCorner.CornerRadius = UDim.new(0, 6)
+KeybindCorner.Parent = KeybindButton
+
+-- Apply Button
+local ApplyButton = Instance.new("TextButton")
+ApplyButton.Size = UDim2.new(0, 200, 0, 50)
+ApplyButton.Position = UDim2.new(0.5, -100, 0.6, 0)
+ApplyButton.Text = "APPLY SETTINGS"
+ApplyButton.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
+ApplyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ApplyButton.TextSize = 16
+ApplyButton.Font = Enum.Font.GothamBold
+ApplyButton.BorderSizePixel = 0
+ApplyButton.Parent = ConfigFrame
+
+local ApplyCorner = Instance.new("UICorner")
+ApplyCorner.CornerRadius = UDim.new(0, 8)
+ApplyCorner.Parent = ApplyButton
+
+-- Apply button hover effect
+ApplyButton.MouseEnter:Connect(function()
+	TweenService:Create(ApplyButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(0, 200, 255)}):Play()
+end)
+ApplyButton.MouseLeave:Connect(function()
+	TweenService:Create(ApplyButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(0, 180, 255)}):Play()
+end)
+
+-- Status message
+local ConfigStatus = Instance.new("TextLabel")
+ConfigStatus.Size = UDim2.new(1, 0, 0, 25)
+ConfigStatus.Position = UDim2.new(0, 0, 0.78, 0)
+ConfigStatus.Text = "Click Apply to save changes"
+ConfigStatus.TextColor3 = Color3.fromRGB(80, 80, 95)
+ConfigStatus.TextSize = 12
+ConfigStatus.Font = Enum.Font.Gotham
+ConfigStatus.BackgroundTransparency = 1
+ConfigStatus.Parent = ConfigFrame
+
+-- ##############################
+-- CONFIG LOGIC
+-- ##############################
+
+local function applyConfig()
+	local newDelay = tonumber(DelayBox.Text) or 0.1
+	if newDelay <= 0 then newDelay = 0.1 end
+	currentDelay = newDelay
+	
+	-- Update status
+	ConfigStatus.Text = "✓ Settings applied! Delay: " .. string.format("%.2f", currentDelay) .. "s"
+	ConfigStatus.TextColor3 = Color3.fromRGB(0, 255, 100)
+	TweenService:Create(ConfigStatus, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(0, 255, 100)}):Play()
+	
+	task.wait(1.5)
+	ConfigStatus.Text = "Click Apply to save changes"
+	ConfigStatus.TextColor3 = Color3.fromRGB(80, 80, 95)
+	TweenService:Create(ConfigStatus, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(80, 80, 95)}):Play()
+	
+	-- If farming is active, restart with new delay
+	if Farming then
+		stopFarming()
+		task.wait(0.1)
+		startFarming()
+	end
+end
+
+ApplyButton.MouseButton1Click:Connect(applyConfig)
+
+-- ##############################
+-- KEYBIND LOGIC
+-- ##############################
+
+local function updateKeybindDisplay()
+	local keyName = string.gsub(tostring(keybind), "Enum.KeyCode.", "")
+	KeybindButton.Text = keyName
+end
+
+KeybindButton.MouseButton1Click:Connect(function()
+	if isWaitingForKey then return end
+	isWaitingForKey = true
+	KeybindButton.Text = "PRESS KEY..."
+	KeybindButton.BackgroundColor3 = Color3.fromRGB(60, 40, 40)
+	
+	-- Reset after 5 seconds if no key pressed
+	task.wait(5)
+	if isWaitingForKey then
+		isWaitingForKey = false
+		KeybindButton.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
+		updateKeybindDisplay()
+	end
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end
+	
+	if isWaitingForKey then
+		if input.UserInputType == Enum.UserInputType.Keyboard then
+			keybind = input.KeyCode
+			isWaitingForKey = false
+			KeybindButton.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
+			updateKeybindDisplay()
+			
+			-- Update config status
+			ConfigStatus.Text = "✓ Keybind updated!"
+			ConfigStatus.TextColor3 = Color3.fromRGB(0, 255, 100)
+			task.wait(1.5)
+			ConfigStatus.Text = "Click Apply to save changes"
+			ConfigStatus.TextColor3 = Color3.fromRGB(80, 80, 95)
+		end
+	end
+	
+	if input.KeyCode == keybind and not isWaitingForKey then
+		closeGUI(false)
+	end
+end)
+
+-- ##############################
+-- TELEPORT TAB
+-- ##############################
+
+local islands = {
+	{name = "🏝️ Enchanted Island", coords = Vector3.new(78.8, 765.8, -130.7)},
+	{name = "🌌 Astral Island", coords = Vector3.new(245.8, 2013.7, 346.2)},
+	{name = "🔮 Mystical Island", coords = Vector3.new(162.7, 4047.1, 13.3)},
+	{name = "🚀 Space Island", coords = Vector3.new(199.7, 5656.7, 12.9)},
+	{name = "❄️ Tundra Island", coords = Vector3.new(199.7, 9284.7, 12.9)},
+	{name = "🌠 Ethernal Island", coords = Vector3.new(199.7, 13679.6, 12.9)},
+	{name = "🌪️ Sandstorm", coords = Vector3.new(199.7, 17685.9, 12.9)},
+	{name = "⛈️ Thunderstorm", coords = Vector3.new(199.7, 24069.6, 12.9)},
+	{name = "🔥 Ancient Inferno Island", coords = Vector3.new(197.8, 28255.9, 7)},
+	{name = "🌙 Midnight Shadow Island", coords = Vector3.new(197.8, 33206.6, 7)},
+	{name = "👻 Mythical Souls Island", coords = Vector3.new(197.8, 39317.1, 7)},
+	{name = "🎄 Winter Wonder Island", coords = Vector3.new(197.8, 46010.1, 7)},
+	{name = "👑 Golden Master Island", coords = Vector3.new(197.8, 52607.3, 7)},
+	{name = "🐉 Dragon Legend Island", coords = Vector3.new(197.8, 59594.3, 7)},
+	{name = "🤖 Cybernetic Legends Island", coords = Vector3.new(289.7, 30382.9, -1.3)},
+	{name = "⚡ Skystorm Ultraus Island", coords = Vector3.new(289.7, 30382.9, -1.3)},
+	{name = "🌀 Chaos Legends Island", coords = Vector3.new(197.5, 74442.4, 9.3)},
+	{name = "💫 Soul Fusion Island", coords = Vector3.new(196.7, 79746.6, 8.3)},
+	{name = "🌑 Dark Elements Island", coords = Vector3.new(198.8, 83198.6, 7.8)},
+	{name = "🧘 Inner Peace Island", coords = Vector3.new(198.3, 87050.6, 8.2)},
+	{name = "🌋 Blazing Vortex Island", coords = Vector3.new(198.2, 91245.6, 7)}
+}
+
+-- Dropdown
+local DropdownButton = Instance.new("TextButton")
+DropdownButton.Size = UDim2.new(0, 340, 0, 50)
+DropdownButton.Position = UDim2.new(0.5, -170, 0.08, 0)
+DropdownButton.Text = "📍 Enchanted Island"
+DropdownButton.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
+DropdownButton.TextColor3 = Color3.fromRGB(200, 200, 215)
+DropdownButton.TextSize = 15
+DropdownButton.Font = Enum.Font.Gotham
+DropdownButton.BorderSizePixel = 0
+DropdownButton.Parent = TeleportContent
+
+local DropdownCorner = Instance.new("UICorner")
+DropdownCorner.CornerRadius = UDim.new(0, 8)
+DropdownCorner.Parent = DropdownButton
+
+local DropdownArrow = Instance.new("TextLabel")
+DropdownArrow.Size = UDim2.new(0, 30, 1, 0)
+DropdownArrow.Position = UDim2.new(1, -35, 0, 0)
+DropdownArrow.Text = "▼"
+DropdownArrow.TextColor3 = Color3.fromRGB(150, 150, 165)
+DropdownArrow.TextSize = 14
+DropdownArrow.Font = Enum.Font.Gotham
+DropdownArrow.BackgroundTransparency = 1
+DropdownArrow.Parent = DropdownButton
+
+local DropdownContainer = Instance.new("Frame")
+DropdownContainer.Size = UDim2.new(0, 340, 0, 0)
+DropdownContainer.Position = UDim2.new(0.5, -170, 0.2, 5)
+DropdownContainer.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+DropdownContainer.BackgroundTransparency = 0
+DropdownContainer.BorderSizePixel = 0
+DropdownContainer.ClipsDescendants = true
+DropdownContainer.Parent = TeleportContent
+
+local ContainerCorner = Instance.new("UICorner")
+ContainerCorner.CornerRadius = UDim.new(0, 8)
+ContainerCorner.Parent = DropdownContainer
+
+local ScrollFrame = Instance.new("ScrollingFrame")
+ScrollFrame.Size = UDim2.new(1, -10, 1, -10)
+ScrollFrame.Position = UDim2.new(0, 5, 0, 5)
+ScrollFrame.BackgroundTransparency = 1
+ScrollFrame.BorderSizePixel = 0
+ScrollFrame.ScrollBarThickness = 4
+ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(80, 80, 95)
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+ScrollFrame.Parent = DropdownContainer
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Parent = ScrollFrame
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 3)
+
+local selectedIsland = islands[1]
+local dropdownOpen = false
+
+for _, islandData in ipairs(islands) do
+	local button = Instance.new("TextButton")
+	button.Size = UDim2.new(1, 0, 0, 38)
+	button.Text = islandData.name
+	button.BackgroundColor3 = Color3.fromRGB(40, 40, 48)
+	button.TextColor3 = Color3.fromRGB(200, 200, 215)
+	button.TextSize = 14
+	button.Font = Enum.Font.Gotham
+	button.BorderSizePixel = 0
+	button.TextXAlignment = Enum.TextXAlignment.Left
+	button.TextTruncate = Enum.TextTruncate.AtEnd
+	button.Parent = ScrollFrame
+	
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.CornerRadius = UDim.new(0, 4)
+	btnCorner.Parent = button
+	
+	button.MouseEnter:Connect(function()
+		TweenService:Create(button, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(55, 55, 65)}):Play()
+	end)
+	button.MouseLeave:Connect(function()
+		TweenService:Create(button, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(40, 40, 48)}):Play()
+	end)
+	
+	button.MouseButton1Click:Connect(function()
+		selectedIsland = islandData
+		DropdownButton.Text = selectedIsland.name
+		closeDropdown()
+		TeleportButton.Text = "TELEPORT TO " .. string.upper(selectedIsland.name)
+		TeleportButton.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+		TeleportButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	end)
+end
+
+UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	local contentSize = UIListLayout.AbsoluteContentSize
+	ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, contentSize.Y + 10)
+end)
+
+local function openDropdown()
+	dropdownOpen = true
+	DropdownButton.BackgroundColor3 = Color3.fromRGB(45, 45, 52)
+	DropdownArrow.Text = "▲"
+	local targetHeight = math.min(UIListLayout.AbsoluteContentSize.Y + 20, 280)
+	TweenService:Create(DropdownContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 340, 0, targetHeight)}):Play()
+end
+
+local function closeDropdown()
+	dropdownOpen = false
+	DropdownButton.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
+	DropdownArrow.Text = "▼"
+	TweenService:Create(DropdownContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 340, 0, 0)}):Play()
+end
+
+DropdownButton.MouseButton1Click:Connect(function()
+	if dropdownOpen then closeDropdown() else openDropdown() end
+end)
+
+-- Teleport Button
+local TeleportButton = Instance.new("TextButton")
+TeleportButton.Size = UDim2.new(0, 280, 0, 52)
+TeleportButton.Position = UDim2.new(0.5, -140, 0.82, 0)
+TeleportButton.Text = "TELEPORT TO ENCHANTED ISLAND"
+TeleportButton.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+TeleportButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+TeleportButton.TextSize = 15
+TeleportButton.Font = Enum.Font.GothamBold
+TeleportButton.BorderSizePixel = 0
+TeleportButton.Parent = TeleportContent
+
+local TeleportCorner = Instance.new("UICorner")
+TeleportCorner.CornerRadius = UDim.new(0, 10)
+TeleportCorner.Parent = TeleportButton
+
+-- Teleport hover effect
+TeleportButton.MouseEnter:Connect(function()
+	TweenService:Create(TeleportButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(0, 220, 120)}):Play()
+end)
+TeleportButton.MouseLeave:Connect(function()
+	if TeleportButton.BackgroundColor3 ~= Color3.fromRGB(0, 255, 100) and TeleportButton.BackgroundColor3 ~= Color3.fromRGB(255, 50, 50) then
+		TweenService:Create(TeleportButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(0, 200, 100)}):Play()
+	end
+end)
+
+TeleportButton.MouseButton1Click:Connect(function()
+	if selectedIsland then
+		local success = false
+		
+		if TeleportEvent then
+			TeleportEvent:FireServer(selectedIsland.coords)
+			success = true
+		end
+		
+		if not success and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+			LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(selectedIsland.coords)
+			success = true
+		end
+		
+		if success then
+			TeleportButton.Text = "✓ TELEPORTED!"
+			TeleportButton.BackgroundColor3 = Color3.fromRGB(0, 255, 100)
+			task.wait(1.2)
+			TeleportButton.Text = "TELEPORT TO " .. string.upper(selectedIsland.name)
+			TeleportButton.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+		else
+			TeleportButton.Text = "✗ TELEPORT FAILED!"
+			TeleportButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+			task.wait(1.2)
+			TeleportButton.Text = "TELEPORT TO " .. string.upper(selectedIsland.name)
+			TeleportButton.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+		end
+	else
+		TeleportButton.Text = "⚠ SELECT AN ISLAND!"
+		TeleportButton.BackgroundColor3 = Color3.fromRGB(255, 150, 0)
+		task.wait(1.2)
+		TeleportButton.Text = "TELEPORT TO ENCHANTED ISLAND"
+		TeleportButton.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+	end
+end)
+
+-- Click outside to close dropdown
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		local mousePos = UserInputService:GetMouseLocation()
+		local dropdownPos = DropdownContainer.AbsolutePosition
+		local dropdownSize = DropdownContainer.AbsoluteSize
+		
+		if dropdownOpen then
+			local isOverDropdown = mousePos.X >= dropdownPos.X and mousePos.X <= dropdownPos.X + dropdownSize.X and
+								  mousePos.Y >= dropdownPos.Y and mousePos.Y <= dropdownPos.Y + dropdownSize.Y
+			local isOverButton = mousePos.X >= DropdownButton.AbsolutePosition.X and mousePos.X <= DropdownButton.AbsolutePosition.X + DropdownButton.AbsoluteSize.X and
+								 mousePos.Y >= DropdownButton.AbsolutePosition.Y and mousePos.Y <= DropdownButton.AbsolutePosition.Y + DropdownButton.AbsoluteSize.Y
+			
+			if not isOverDropdown and not isOverButton then
+				closeDropdown()
+			end
+		end
+	end
+end)
+
+-- ##############################
+-- FARMING LOGIC
+-- ##############################
+
+local function startFarming()
+	if FarmLoop then return end
+
+	Farming = true
+	FarmLoop = game:GetService("RunService").Stepped:Connect(function()
+		if not Farming then return end
+		local Event = LocalPlayer:FindFirstChild("ninjaEvent")
+		if Event then
+			Event:FireServer("swingKatana")
+		end
+		task.wait(currentDelay)
+	end)
+	FarmButton.Text = "STOP FARMING"
+	FarmButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+	StatusLabel.Text = "STATUS: FARMING"
+	StatusLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
+end
+
+local function stopFarming()
+	if FarmLoop then
+		FarmLoop:Disconnect()
+		FarmLoop = nil
+	end
+	Farming = false
+	FarmButton.Text = "START FARMING"
+	FarmButton.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+	StatusLabel.Text = "STATUS: IDLE"
+	StatusLabel.TextColor3 = Color3.fromRGB(130, 130, 145)
+end
+
+FarmButton.MouseButton1Click:Connect(function()
+	if Farming then stopFarming() else startFarming() end
+end)
+
+-- ##############################
+-- CLEANUP
+-- ##############################
+
+LocalPlayer:GetPropertyChangedSignal("Character"):Connect(function()
+	if not LocalPlayer.Character then stopFarming() end
+end)
+
+ScreenGui.AncestryChanged:Connect(function()
+	if not ScreenGui.Parent then stopFarming() end
+end)
+
+-- ##############################
+-- INITIAL STATE
+-- ##############################
+
+switchTab("Main")
+updateKeybindDisplay()
+
+print("✦ Ninja Hub Loaded Successfully")
+print("✦ Total Islands: " .. #islands)
+print("✦ Press RCONTROL to toggle GUI")
