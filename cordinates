@@ -1,0 +1,74 @@
+-- Player Location Script (X, Y, Z Order)
+-- Press F to toggle, C to copy coordinates
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local userInput = game:GetService("UserInputService")
+
+-- Create GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = game.CoreGui
+screenGui.ResetOnSpawn = false
+
+local coordLabel = Instance.new("TextLabel")
+coordLabel.Size = UDim2.new(0, 400, 0, 50)
+coordLabel.Position = UDim2.new(0, 10, 0, 10)
+coordLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+coordLabel.BackgroundTransparency = 0.5
+coordLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+coordLabel.TextScaled = true
+coordLabel.Font = Enum.Font.SourceSansBold
+coordLabel.Text = "📍 Waiting..."
+coordLabel.Parent = screenGui
+
+local visible = true
+local currentPos = ""
+local copyText = ""
+
+-- Toggle with F
+userInput.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.F then
+        visible = not visible
+        screenGui.Enabled = visible
+    end
+    
+    -- Copy with C
+    if input.KeyCode == Enum.KeyCode.C and visible and currentPos ~= "" then
+        if setclipboard then
+            setclipboard(copyText)
+        elseif set_clipboard then
+            set_clipboard(copyText)
+        end
+        coordLabel.Text = "📋 COPIED: " .. copyText
+        task.wait(1)
+        coordLabel.Text = currentPos
+    end
+end)
+
+-- Update loop
+game:GetService("RunService").RenderStepped:Connect(function()
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if rootPart then
+        local pos = rootPart.Position
+        -- Format for display: X: 82.5  Y: 765.8  Z: -127.8
+        currentPos = string.format("X: %s  Y: %s  Z: %s", 
+            tostring(math.floor(pos.X * 10) / 10),
+            tostring(math.floor(pos.Y * 10) / 10),
+            tostring(math.floor(pos.Z * 10) / 10)
+        )
+        -- Format for copy: 82.5 765.8 -127.8 (space separated, no labels)
+        copyText = string.format("%s %s %s", 
+            tostring(math.floor(pos.X * 10) / 10),
+            tostring(math.floor(pos.Y * 10) / 10),
+            tostring(math.floor(pos.Z * 10) / 10)
+        )
+        coordLabel.Text = "📍 " .. currentPos
+    end
+end)
+
+-- Handle respawn
+player.CharacterAdded:Connect(function(newChar)
+    character = newChar
+end)
+
+print("✅ Location script loaded! X, Y, Z | F=toggle, C=copy")
