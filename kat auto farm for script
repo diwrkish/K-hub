@@ -1,0 +1,20 @@
+while true do
+    task.wait(1)
+    local myChar = game.Players.LocalPlayer.Character
+    if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+        for _, v in ipairs(game.Players:GetChildren()) do
+            if v ~= game.Players.LocalPlayer then
+                local char = v.Character
+                if char then
+                    local head = char:FindFirstChild("Head")
+                    if head then
+                        myChar.HumanoidRootPart.CFrame = head.CFrame * CFrame.new(0, 0, .4)
+                        mouse1click()
+                        task.wait(0.1)
+                        myChar.HumanoidRootPart.CFrame = CFrame.new(-7, 958, -36)
+                    end
+                end
+            end
+        end
+    end
+end
