@@ -1,20 +1,55 @@
-while true do
-    task.wait(1)
-    local myChar = game.Players.LocalPlayer.Character
-    if myChar and myChar:FindFirstChild("HumanoidRootPart") then
-        for _, v in ipairs(game.Players:GetChildren()) do
-            if v ~= game.Players.LocalPlayer then
-                local char = v.Character
-                if char then
-                    local head = char:FindFirstChild("Head")
-                    if head then
-                        myChar.HumanoidRootPart.CFrame = head.CFrame * CFrame.new(0, 0, .4)
-                        mouse1click()
-                        task.wait(0.1)
-                        myChar.HumanoidRootPart.CFrame = CFrame.new(-7, 958, -36)
+getgenv().katAutofarm = true
+
+task.spawn(function()
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local vu = game:GetService("VirtualUser")
+
+    -- Only slot 2 is equipped. Change "2" to whatever weapon ID you want.
+    local SLOT_2 = "2"
+
+    local function equipSlot2()
+        pcall(function()
+            ReplicatedStorage.GameEvents.Misk.InventoryChange:FireServer("Equip", SLOT_2, 1)
+        end)
+    end
+
+    local function click()
+        pcall(function()
+            vu:Button1Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+            task.wait(0.05)
+            vu:Button1Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+        end)
+    end
+
+    while getgenv().katAutofarm do
+        task.wait(1)
+
+        -- Equip slot 2 only
+        equipSlot2()
+        task.wait(0.15)
+
+        local myChar = LocalPlayer.Character
+        local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
+        if myHRP then
+            for _, v in ipairs(Players:GetPlayers()) do
+                if not getgenv().katAutofarm then break end
+                if v ~= LocalPlayer then
+                    local char = v.Character
+                    if char then
+                        local head = char:FindFirstChild("Head")
+                        local hum = char:FindFirstChildOfClass("Humanoid")
+                        if head and hum and hum.Health > 0 then
+                            myHRP.CFrame = head.CFrame * CFrame.new(0, 0, 0.4)
+                            task.wait(0.08)
+                            click()
+                            task.wait(0.1)
+                        end
                     end
                 end
             end
+            myHRP.CFrame = CFrame.new(-7, 958, -36)
         end
     end
-end
+end)
