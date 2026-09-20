@@ -15,9 +15,9 @@ This repo is intentionally lightweight and experimental. The goal is to provide 
 ## Contents
 
 - `K hub` — main K-Hub script and UI
-- `K hub executor` — executor-style interface example
-- `K hub keyboard` — virtual keyboard helper prototype
-- `ftap k hub` — additional utility-style script
+- `K hub executor` — in game fast executor
+- `K hub keyboard` — virtual keyboard for mobile
+- `ftap k hub` — a script for fling things and people
 - `README.md` — project overview and usage notes
 
 ## Features
