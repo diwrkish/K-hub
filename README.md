@@ -25,15 +25,14 @@ This repo is intentionally lightweight and experimental. The goal is to provide 
 - Simple custom UI layouts
 - Button-driven script execution examples
 - Keybind and toggle-style controls
-- Utility scripts for experimentation and testing
+- Utility scripts
 - Modular, script-by-script layout for quick exploration
 
 ## Usage
 
 1. Open the Lua script file you want to test.
-2. Review the code and understand what it does before running it.
-3. Use it only in environments where you are authorized to run scripts.
-4. Keep backups of important files before modifying or testing new scripts.
+2. copy the raw code/loadstring
+3. paste it into your executor and execute it in game dont forget to inject
 
 ## Important notes
 
@@ -83,8 +82,3 @@ This project is currently experimental and may be updated or reorganized as it g
 
 ---
 
-If you want, I can also help you:
-- rename the files to cleaner names
-- add a better project structure
-- create a polished `LICENSE` file
-- make the repo look more professional for GitHub visitors
